@@ -42,7 +42,7 @@ func TestMainFunction(t *testing.T) {
 			defer func() { os.Args = oldArgs }()
 
 			// プログラム名 + テスト引数を設定
-			os.Args = append([]string{"git-rewrite-tools"}, tt.args...)
+			os.Args = append([]string{"git-rewrite"}, tt.args...)
 
 			// 標準出力をキャプチャするためのパイプを作成
 			oldStdout := os.Stdout
@@ -91,7 +91,7 @@ func TestMainFunction(t *testing.T) {
 // TestBinaryExecution はビルドされたバイナリの実行をテストする
 func TestBinaryExecution(t *testing.T) {
 	// バイナリが存在するかチェック
-	binaryPath := "./git-rewrite-tools"
+	binaryPath := "./git-rewrite"
 	if _, err := os.Stat(binaryPath); os.IsNotExist(err) {
 		t.Skip("バイナリが見つかりません。先に 'go build' を実行してください")
 	}

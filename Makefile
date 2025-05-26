@@ -1,7 +1,7 @@
 # Git Rewrite Tools Makefile
 
 # 変数定義
-BINARY_NAME=git-rewrite-tools
+BINARY_NAME=git-rewrite
 MAIN_PACKAGE=.
 BUILD_DIR=.
 TEST_TIMEOUT=30s

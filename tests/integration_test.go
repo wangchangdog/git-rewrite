@@ -11,13 +11,13 @@ import (
 // TestBinaryIntegration はバイナリの統合テストを実行する
 func TestBinaryIntegration(t *testing.T) {
 	// バイナリのパスを設定
-	binaryPath := "../git-rewrite-tools"
+	binaryPath := "../git-rewrite"
 
 	// バイナリが存在するかチェック
 	if _, err := os.Stat(binaryPath); os.IsNotExist(err) {
 		// バイナリをビルド
 		t.Log("バイナリが見つかりません。ビルドを実行します...")
-		cmd := exec.Command("go", "build", "-o", "git-rewrite-tools", ".")
+		cmd := exec.Command("go", "build", "-o", "git-rewrite", ".")
 		cmd.Dir = ".."
 		if err := cmd.Run(); err != nil {
 			t.Fatalf("バイナリのビルドに失敗しました: %v", err)
@@ -36,7 +36,7 @@ func TestBinaryIntegration(t *testing.T) {
 		outputStr := string(output)
 		expectedStrings := []string{
 			"使用方法:",
-			"git-rewrite-tools <command> [options]",
+			"git-rewrite <command> [options]",
 			"rewrite",
 			"demo",
 			"test",
@@ -128,7 +128,7 @@ func TestBinaryWithMockGitRepo(t *testing.T) {
 	}
 
 	t.Run("rewriteコマンド引数不足テスト", func(t *testing.T) {
-		binaryPath := "../git-rewrite-tools"
+		binaryPath := "../git-rewrite"
 		cmd := exec.Command(binaryPath, "rewrite")
 		output, err := cmd.CombinedOutput()
 
@@ -138,13 +138,13 @@ func TestBinaryWithMockGitRepo(t *testing.T) {
 		}
 
 		outputStr := string(output)
-		if !strings.Contains(outputStr, "使用方法: git-rewrite-tools rewrite") {
+		if !strings.Contains(outputStr, "使用方法: git-rewrite rewrite") {
 			t.Errorf("期待される使用方法メッセージが見つかりません。出力: %s", outputStr)
 		}
 	})
 
 	t.Run("demoコマンド引数不足テスト", func(t *testing.T) {
-		binaryPath := "../git-rewrite-tools"
+		binaryPath := "../git-rewrite"
 		cmd := exec.Command(binaryPath, "demo")
 		output, err := cmd.CombinedOutput()
 
@@ -154,7 +154,7 @@ func TestBinaryWithMockGitRepo(t *testing.T) {
 		}
 
 		outputStr := string(output)
-		if !strings.Contains(outputStr, "使用方法: git-rewrite-tools demo") {
+		if !strings.Contains(outputStr, "使用方法: git-rewrite demo") {
 			t.Errorf("期待される使用方法メッセージが見つかりません。出力: %s", outputStr)
 		}
 	})

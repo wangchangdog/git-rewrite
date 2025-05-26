@@ -2,11 +2,11 @@
 
 # ===== バイナリファイル =====
 # メインバイナリ
-git-rewrite-tools
-git-rewrite-tools.exe
+git-rewrite
+git-rewrite.exe
 
 # リリース用バイナリ
-git-rewrite-tools-*
+git-rewrite-*
 *.exe
 
 # ===== Go関連 =====

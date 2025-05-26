@@ -16,21 +16,17 @@ var osExit = os.Exit
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("使用方法:")
-		fmt.Println("  git-rewrite-tools <command> [options]")
-		fmt.Println("")
-		fmt.Println("利用可能なコマンド:")
-		fmt.Println("  rewrite <github_token> [target_directory] - Git履歴の書き換えとリモートリポジトリ管理")
-		fmt.Println("  demo <github_token>                      - リモートリポジトリ作成機能のデモ")
-		fmt.Println("  test                                     - テストの実行")
-		fmt.Println("")
-		fmt.Println("環境変数:")
-		fmt.Println("  GITHUB_USER  - GitHubユーザー名")
-		fmt.Println("  GITHUB_EMAIL - GitHubメールアドレス")
+		showHelp()
 		osExit(1)
 	}
 
 	command := os.Args[1]
+
+	// --help オプションのチェック
+	if command == "--help" || command == "-h" || command == "help" {
+		showHelp()
+		osExit(0)
+	}
 
 	switch command {
 	case "rewrite":
@@ -41,13 +37,38 @@ func main() {
 		runTests()
 	default:
 		fmt.Printf("不明なコマンド: %s\n", command)
+		fmt.Println("")
+		showHelp()
 		osExit(1)
 	}
 }
 
+func showHelp() {
+	fmt.Println("使用方法:")
+	fmt.Println("  git-rewrite <command> [options]")
+	fmt.Println("  git-rewrite --help")
+	fmt.Println("")
+	fmt.Println("利用可能なコマンド:")
+	fmt.Println("  rewrite <github_token> [target_directory] - Git履歴の書き換えとリモートリポジトリ管理")
+	fmt.Println("  demo <github_token>                      - リモートリポジトリ作成機能のデモ")
+	fmt.Println("  test                                     - テストの実行")
+	fmt.Println("  help, --help, -h                         - このヘルプを表示")
+	fmt.Println("")
+	fmt.Println("環境変数:")
+	fmt.Println("  GITHUB_USER  - GitHubユーザー名")
+	fmt.Println("  GITHUB_EMAIL - GitHubメールアドレス")
+	fmt.Println("")
+	fmt.Println("例:")
+	fmt.Println("  git-rewrite --help")
+	fmt.Println("  git-rewrite test")
+	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx")
+	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects")
+	fmt.Println("  git-rewrite demo ghp_xxxxxxxxxxxxxxxxxxxx")
+}
+
 func runRewrite(args []string) {
 	if len(args) < 1 {
-		fmt.Println("使用方法: git-rewrite-tools rewrite <github_token> [target_directory]")
+		fmt.Println("使用方法: git-rewrite rewrite <github_token> [target_directory]")
 		fmt.Println("  github_token: GitHubのPersonal Access Token（repositoryアクセス権限付き）")
 		fmt.Println("  target_directory: 対象ディレクトリ（省略時は現在のディレクトリ）")
 		fmt.Println("")
@@ -152,7 +173,7 @@ func runRewrite(args []string) {
 
 func runDemo(args []string) {
 	if len(args) < 1 {
-		fmt.Println("使用方法: git-rewrite-tools demo <github_token>")
+		fmt.Println("使用方法: git-rewrite demo <github_token>")
 		fmt.Println("  github_token: GitHubのPersonal Access Token（repositoryアクセス権限付き）")
 		fmt.Println("")
 		fmt.Println("環境変数も必要です:")
