@@ -1,0 +1,215 @@
+# Git Rewrite Tools - .gitignore
+
+# ===== バイナリファイル =====
+# メインバイナリ
+git-rewrite-tools
+git-rewrite-tools.exe
+
+# リリース用バイナリ
+git-rewrite-tools-*
+*.exe
+
+# ===== Go関連 =====
+# ビルド出力
+*.o
+*.a
+*.so
+
+# テスト関連
+*.test
+*.prof
+coverage.out
+coverage.html
+*.cover
+
+# Go モジュールキャッシュ（通常は除外しない）
+# go.sum は含める
+
+# ベンダーディレクトリ（go mod使用時は通常不要）
+vendor/
+
+# ===== IDE・エディタ関連 =====
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# GoLand / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Atom
+.atom/
+
+# ===== OS関連 =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ===== 開発・テスト関連 =====
+# 一時ディレクトリ
+tmp/
+temp/
+.tmp/
+
+# ログファイル
+*.log
+logs/
+
+# デバッグファイル
+debug
+debug.test
+
+# プロファイリングファイル
+*.pprof
+*.trace
+
+# ベンチマーク結果
+*.bench
+
+# ===== セキュリティ関連 =====
+# 環境変数ファイル
+.env
+.env.local
+.env.*.local
+
+# 設定ファイル（機密情報を含む可能性）
+config.json
+config.yaml
+config.yml
+secrets.json
+secrets.yaml
+secrets.yml
+
+# GitHub Personal Access Token
+.github_token
+github_token.txt
+token.txt
+
+# SSH キー
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# ===== プロジェクト固有 =====
+# テスト用の一時リポジトリ
+test_repos/
+demo_repos/
+*_test_repo_*/
+*_demo_repo_*/
+
+# バックアップファイル
+*.backup
+*.bak
+*_backup/
+
+# 出力ディレクトリ
+dist/
+build/
+out/
+
+# ドキュメント生成
+docs/generated/
+*.pdf
+
+# ===== その他 =====
+# アーカイブファイル
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# パッチファイル
+*.patch
+*.diff
+
+# エラーレポート
+crash.log
+panic.log
+
+# パフォーマンス測定
+*.cpuprofile
+*.memprofile
+*.blockprofile
+*.mutexprofile
+
+# Go 1.18+ ワークスペース
+go.work
+go.work.sum
+
+# Air（ホットリロード）
+.air.toml
+tmp/
+
+# ===== カスタム除外 =====
+# プロジェクト固有の除外項目をここに追加
+# 例: 特定の設定ファイルや開発用スクリプト
+
+# 開発用スクリプト
+scripts/dev/
+dev_*
+
+# 実験用ファイル
+experiment/
+playground/
+scratch/ 
