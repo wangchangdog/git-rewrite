@@ -130,7 +130,7 @@ func TestGetTargetOwner(t *testing.T) {
 				t.Setenv("GITHUB_ORGANIZATION", tt.orgValue)
 			}
 
-			result := GetTargetOwner(tt.defaultUser)
+			result := GetTargetOwner(tt.defaultUser, tt.repoOwner, tt.orgValue)
 
 			if result != tt.expected {
 				t.Errorf("期待される結果: %s, 実際: %s", tt.expected, result)
@@ -163,7 +163,7 @@ func TestIsPersonalRepository(t *testing.T) {
 				t.Setenv("GITHUB_REPOSITORY_OWNER", tt.repoOwner)
 			}
 
-			result := IsPersonalRepository()
+			result := IsPersonalRepository(tt.repoOwner)
 
 			if result != tt.expected {
 				t.Errorf("期待される結果: %t, 実際: %t", tt.expected, result)

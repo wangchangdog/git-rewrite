@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"git-rewrite-and-go/pkg/utils"
 	"io"
 	"net/http"
 	"os"
@@ -166,10 +167,10 @@ func (c *Client) CreateRepo(owner, repo string, private bool) error {
 	// リポジトリ作成のURL決定
 	var url string
 
-	// GITHUB_REPOSITORY_OWNER が設定されている場合は個人リポジトリとして扱う
-	if os.Getenv("GITHUB_REPOSITORY_OWNER") != "" {
+	// 個人リポジトリ所有者が設定されている場合は個人リポジトリとして扱う
+	if utils.IsPersonalRepository(os.Getenv("GITHUB_REPOSITORY_OWNER")) {
 		url = "https://api.github.com/user/repos"
-		fmt.Printf("個人リポジトリとして作成します（GITHUB_REPOSITORY_OWNER指定）: %s\n", owner)
+		fmt.Printf("個人リポジトリとして作成します（個人リポジトリ所有者指定）: %s\n", owner)
 	} else if owner == currentUser.Login {
 		// 現在のユーザーと同じ場合は個人リポジトリ
 		url = "https://api.github.com/user/repos"

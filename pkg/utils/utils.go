@@ -114,13 +114,20 @@ func FileExists(filename string) bool {
 	return !os.IsNotExist(err)
 }
 
-// GetTargetOwner は環境変数を考慮してターゲットオーナーを決定する
-func GetTargetOwner(defaultUser string) string {
-	// GITHUB_REPOSITORY_OWNER が設定されている場合は個人リポジトリとして優先
+// GetTargetOwner は設定を考慮してターゲットオーナーを決定する
+func GetTargetOwner(defaultUser, owner, organization string) string {
+	// 引数で指定された個人リポジトリ所有者が最優先
+	if owner != "" {
+		return owner
+	}
+	// 次に引数で指定された組織
+	if organization != "" {
+		return organization
+	}
+	// 環境変数からのフォールバック（後方互換性）
 	if repoOwner := os.Getenv("GITHUB_REPOSITORY_OWNER"); repoOwner != "" {
 		return repoOwner
 	}
-	// 次に GITHUB_ORGANIZATION をチェック
 	if githubOrg := os.Getenv("GITHUB_ORGANIZATION"); githubOrg != "" {
 		return githubOrg
 	}
@@ -128,7 +135,11 @@ func GetTargetOwner(defaultUser string) string {
 }
 
 // IsPersonalRepository は個人リポジトリかどうかを判定する
-func IsPersonalRepository() bool {
-	// GITHUB_REPOSITORY_OWNER が設定されている場合は個人リポジトリ
+func IsPersonalRepository(owner string) bool {
+	// 引数で個人リポジトリ所有者が指定されている場合
+	if owner != "" {
+		return true
+	}
+	// 環境変数からのフォールバック（後方互換性）
 	return os.Getenv("GITHUB_REPOSITORY_OWNER") != ""
 }

@@ -27,6 +27,10 @@ type Rewriter struct {
 	GitHubEmail            string
 	CollaboratorConfigPath string
 	PushAll                bool
+	Owner                  string
+	Organization           string
+	Private                bool
+	CollaboratorsString    string
 }
 
 // NewRewriter は新しいRewriterを作成する
@@ -37,6 +41,7 @@ func NewRewriter(githubToken, githubUser, githubEmail string) *Rewriter {
 		GitHubEmail:            githubEmail,
 		CollaboratorConfigPath: "", // デフォルトは空（環境変数のみ使用）
 		PushAll:                false,
+		Private:                true, // デフォルトはプライベート
 	}
 }
 
@@ -48,12 +53,29 @@ func NewRewriterWithConfig(githubToken, githubUser, githubEmail, configPath stri
 		GitHubEmail:            githubEmail,
 		CollaboratorConfigPath: configPath,
 		PushAll:                false,
+		Private:                true, // デフォルトはプライベート
 	}
 }
 
 // SetPushAllOption はプッシュオプションを設定する
 func (r *Rewriter) SetPushAllOption(pushAll bool) {
 	r.PushAll = pushAll
+}
+
+// SetOwnershipConfig は所有者設定を行う
+func (r *Rewriter) SetOwnershipConfig(owner, organization string) {
+	r.Owner = owner
+	r.Organization = organization
+}
+
+// SetPrivateOption はプライベートリポジトリ設定を行う
+func (r *Rewriter) SetPrivateOption(private bool) {
+	r.Private = private
+}
+
+// SetCollaboratorsFromString は文字列からコラボレーター設定を行う
+func (r *Rewriter) SetCollaboratorsFromString(collaborators string) {
+	r.CollaboratorsString = collaborators
 }
 
 // RewriteGitHistory はGit履歴を書き換える
@@ -110,7 +132,7 @@ fi
 
 // UpdateRemoteURL はリモートURLを更新する
 func (r *Rewriter) UpdateRemoteURL(gitDir string) error {
-	targetOwner := utils.GetTargetOwner(r.GitHubUser)
+	targetOwner := utils.GetTargetOwner(r.GitHubUser, r.Owner, r.Organization)
 	fmt.Printf("[2/2] Git remoteのorganization部分を%sに変更します...\n", targetOwner)
 
 	// remote originが存在するかチェック
@@ -151,12 +173,12 @@ func (r *Rewriter) generateNewRemoteURL(remoteURL string) (string, error) {
 		return "", fmt.Errorf("remote URLが想定外の形式です: %s (解析結果: owner='%s', repo='%s')", remoteURL, owner, repo)
 	}
 
-	targetOwner := utils.GetTargetOwner(r.GitHubUser)
+	targetOwner := utils.GetTargetOwner(r.GitHubUser, r.Owner, r.Organization)
 	if targetOwner != r.GitHubUser {
-		if utils.IsPersonalRepository() {
-			fmt.Printf("GITHUB_REPOSITORY_OWNER環境変数が設定されています（個人リポジトリ）: %s\n", targetOwner)
+		if utils.IsPersonalRepository(r.Owner) {
+			fmt.Printf("個人リポジトリ所有者が設定されています: %s\n", targetOwner)
 		} else {
-			fmt.Printf("GITHUB_ORGANIZATION環境変数が設定されています: %s\n", targetOwner)
+			fmt.Printf("組織が設定されています: %s\n", targetOwner)
 		}
 	}
 
@@ -238,7 +260,7 @@ func (r *Rewriter) VerifyAndPushRemote(gitDir string) error {
 	fmt.Printf("リポジトリ情報: %s/%s\n", owner, repoName)
 
 	// 期待されるオーナーを決定
-	expectedOwner := utils.GetTargetOwner(r.GitHubUser)
+	expectedOwner := utils.GetTargetOwner(r.GitHubUser, r.Owner, r.Organization)
 
 	// リモートURLに期待されるオーナーが含まれているか確認
 	if !strings.Contains(remoteURL, expectedOwner) {
@@ -261,7 +283,15 @@ func (r *Rewriter) VerifyAndPushRemote(gitDir string) error {
 		fmt.Printf("⚠️  リモートリポジトリ %s/%s が存在しません。\n", owner, repoName)
 		fmt.Println("リポジトリを作成しています...")
 
-		if err := r.GitHubClient.CreateRepoWithCollaborators(owner, repoName, true, r.CollaboratorConfigPath); err != nil {
+		// コラボレーター設定を決定
+		collaboratorConfig := r.CollaboratorConfigPath
+		if collaboratorConfig == "" && r.CollaboratorsString != "" {
+			// 文字列からコラボレーター設定を一時的に環境変数に設定
+			os.Setenv("GITHUB_COLLABORATORS", r.CollaboratorsString)
+			defer os.Unsetenv("GITHUB_COLLABORATORS")
+		}
+
+		if err := r.GitHubClient.CreateRepoWithCollaborators(owner, repoName, r.Private, collaboratorConfig); err != nil {
 			return fmt.Errorf("リポジトリ作成エラー: %v", err)
 		}
 	} else {
