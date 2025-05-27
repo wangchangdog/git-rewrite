@@ -173,6 +173,50 @@ func RunEmptyRepoDemo(githubUser, githubEmail string) error {
 		fmt.Printf("   README.md内容: %s...\n", string(content)[:50])
 	}
 
+	// 追加ブランチとタグの作成テスト（--push-all機能のデモ用）
+	fmt.Println("\n7. 追加ブランチ・タグ作成テスト（--push-all機能デモ用）:")
+
+	// 新しいブランチを作成
+	if _, _, err := utils.RunCommand(tempDir, "git", "checkout", "-b", "feature-branch"); err != nil {
+		fmt.Printf("   ⚠️  ブランチ作成に失敗しました: %v\n", err)
+	} else {
+		fmt.Println("   ✅ feature-branchを作成しました。")
+
+		// ブランチで追加のコミット
+		featurePath := filepath.Join(tempDir, "feature.txt")
+		if err := os.WriteFile(featurePath, []byte("Feature content\n"), 0644); err == nil {
+			if _, _, err := utils.RunCommand(tempDir, "git", "add", "feature.txt"); err == nil {
+				if _, _, err := utils.RunCommand(tempDir, "git", "-c", "user.name=Demo User", "-c", "user.email=demo@example.com", "commit", "-m", "Add feature"); err == nil {
+					fmt.Println("   ✅ feature-branchにコミットを追加しました。")
+				}
+			}
+		}
+	}
+
+	// mainブランチに戻る
+	if _, _, err := utils.RunCommand(tempDir, "git", "checkout", "master"); err != nil {
+		// masterブランチが存在しない場合はmainを試行
+		if _, _, err := utils.RunCommand(tempDir, "git", "checkout", "main"); err != nil {
+			fmt.Printf("   ⚠️  メインブランチへの切り替えに失敗しました: %v\n", err)
+		}
+	}
+
+	// タグを作成
+	if _, _, err := utils.RunCommand(tempDir, "git", "tag", "v1.0.0"); err != nil {
+		fmt.Printf("   ⚠️  タグ作成に失敗しました: %v\n", err)
+	} else {
+		fmt.Println("   ✅ v1.0.0タグを作成しました。")
+	}
+
+	// --push-all機能のテスト
+	fmt.Println("\n8. --push-all機能テスト:")
+	rewriter.SetPushAllOption(true)
+	if err := rewriter.PushAllBranchesAndTags(tempDir); err != nil {
+		fmt.Printf("   ⚠️  --push-all機能のテストをスキップしました（リモートが設定されていないため）: %v\n", err)
+	} else {
+		fmt.Println("   ✅ --push-all機能のテストが完了しました。")
+	}
+
 	fmt.Println("\n=== 全テスト完了 ===")
 	return nil
 }

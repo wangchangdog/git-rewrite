@@ -26,6 +26,7 @@ type Rewriter struct {
 	GitHubUser             string
 	GitHubEmail            string
 	CollaboratorConfigPath string
+	PushAll                bool
 }
 
 // NewRewriter は新しいRewriterを作成する
@@ -35,6 +36,7 @@ func NewRewriter(githubToken, githubUser, githubEmail string) *Rewriter {
 		GitHubUser:             githubUser,
 		GitHubEmail:            githubEmail,
 		CollaboratorConfigPath: "", // デフォルトは空（環境変数のみ使用）
+		PushAll:                false,
 	}
 }
 
@@ -45,7 +47,13 @@ func NewRewriterWithConfig(githubToken, githubUser, githubEmail, configPath stri
 		GitHubUser:             githubUser,
 		GitHubEmail:            githubEmail,
 		CollaboratorConfigPath: configPath,
+		PushAll:                false,
 	}
+}
+
+// SetPushAllOption はプッシュオプションを設定する
+func (r *Rewriter) SetPushAllOption(pushAll bool) {
+	r.PushAll = pushAll
 }
 
 // RewriteGitHistory はGit履歴を書き換える
@@ -303,6 +311,70 @@ func (r *Rewriter) VerifyAndPushRemote(gitDir string) error {
 	}
 
 	fmt.Println("✅ リモートへのプッシュが完了しました。")
+
+	// --push-all オプションが有効な場合、全ブランチとタグをプッシュ
+	if r.PushAll {
+		if err := r.PushAllBranchesAndTags(gitDir); err != nil {
+			return fmt.Errorf("全ブランチ・タグのプッシュエラー: %v", err)
+		}
+	}
+
+	return nil
+}
+
+// PushAllBranchesAndTags はローカルの全ブランチとタグをリモートにプッシュする
+func (r *Rewriter) PushAllBranchesAndTags(gitDir string) error {
+	fmt.Println("\n--- 全ブランチ・タグのプッシュ ---")
+
+	// 全ブランチをプッシュ
+	fmt.Println("🌿 全ブランチをプッシュしています...")
+	stdout, stderr, err := utils.RunCommand(gitDir, "git", "push", "--all", "origin")
+	if err != nil {
+		// エラーが発生した場合でも、強制プッシュを試行
+		fmt.Println("⚠️  通常のブランチプッシュでエラーが発生しました。強制プッシュを試行します...")
+		stdout, stderr, err = utils.RunCommand(gitDir, "git", "push", "--force", "--all", "origin")
+		if err != nil {
+			fmt.Printf("❌ 全ブランチの強制プッシュに失敗しました: %v\n", err)
+			if stderr != "" {
+				fmt.Printf("エラー詳細: %s\n", stderr)
+			}
+			// ブランチプッシュが失敗してもタグプッシュは試行する
+		} else {
+			fmt.Println("✅ 全ブランチの強制プッシュが完了しました。")
+		}
+	} else {
+		fmt.Println("✅ 全ブランチのプッシュが完了しました。")
+	}
+
+	if stdout != "" {
+		fmt.Printf("ブランチプッシュ結果: %s\n", stdout)
+	}
+
+	// 全タグをプッシュ
+	fmt.Println("🏷️  全タグをプッシュしています...")
+	stdout, stderr, err = utils.RunCommand(gitDir, "git", "push", "--tags", "origin")
+	if err != nil {
+		// エラーが発生した場合でも、強制プッシュを試行
+		fmt.Println("⚠️  通常のタグプッシュでエラーが発生しました。強制プッシュを試行します...")
+		stdout, stderr, err = utils.RunCommand(gitDir, "git", "push", "--force", "--tags", "origin")
+		if err != nil {
+			fmt.Printf("❌ 全タグの強制プッシュに失敗しました: %v\n", err)
+			if stderr != "" {
+				fmt.Printf("エラー詳細: %s\n", stderr)
+			}
+			return fmt.Errorf("タグプッシュエラー: %v", err)
+		} else {
+			fmt.Println("✅ 全タグの強制プッシュが完了しました。")
+		}
+	} else {
+		fmt.Println("✅ 全タグのプッシュが完了しました。")
+	}
+
+	if stdout != "" {
+		fmt.Printf("タグプッシュ結果: %s\n", stdout)
+	}
+
+	fmt.Println("🚀 全ブランチ・タグのプッシュが完了しました。")
 	return nil
 }
 

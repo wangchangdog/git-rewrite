@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"git-rewrite-and-go/pkg/demo"
 	"git-rewrite-and-go/pkg/rewriter"
@@ -49,10 +50,10 @@ func showHelp() {
 	fmt.Println("  git-rewrite --help")
 	fmt.Println("")
 	fmt.Println("利用可能なコマンド:")
-	fmt.Println("  rewrite <github_token> [target_directory] [collaborator_config] - Git履歴の書き換えとリモートリポジトリ管理")
-	fmt.Println("  demo <github_token>                                            - リモートリポジトリ作成機能のデモ")
-	fmt.Println("  test                                                           - テストの実行")
-	fmt.Println("  help, --help, -h                                               - このヘルプを表示")
+	fmt.Println("  rewrite <github_token> [target_directory] [collaborator_config] [--push-all] - Git履歴の書き換えとリモートリポジトリ管理")
+	fmt.Println("  demo <github_token>                                                          - リモートリポジトリ作成機能のデモ")
+	fmt.Println("  test                                                                         - テストの実行")
+	fmt.Println("  help, --help, -h                                                             - このヘルプを表示")
 	fmt.Println("")
 	fmt.Println("環境変数:")
 	fmt.Println("  GITHUB_USER           - GitHubユーザー名")
@@ -72,6 +73,8 @@ func showHelp() {
 	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx")
 	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects")
 	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects collaborators.json")
+	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects collaborators.json --push-all")
+	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx --push-all")
 	fmt.Println("  git-rewrite demo ghp_xxxxxxxxxxxxxxxxxxxx")
 	fmt.Println("")
 	fmt.Println("コラボレーター設定例:")
@@ -98,10 +101,11 @@ func showHelp() {
 
 func runRewrite(args []string) {
 	if len(args) < 1 {
-		fmt.Println("使用方法: git-rewrite rewrite <github_token> [target_directory] [collaborator_config]")
+		fmt.Println("使用方法: git-rewrite rewrite <github_token> [target_directory] [collaborator_config] [--push-all]")
 		fmt.Println("  github_token: GitHubのPersonal Access Token（repositoryアクセス権限付き）")
 		fmt.Println("  target_directory: 対象ディレクトリ（省略時は現在のディレクトリ）")
 		fmt.Println("  collaborator_config: コラボレーター設定（例: user1:push,user2:admin）")
+		fmt.Println("  --push-all: プッシュ成功後にローカルの全ブランチ・タグをプッシュ")
 		fmt.Println("")
 		fmt.Println("環境変数も必要です:")
 		fmt.Println("  GITHUB_USER: GitHubユーザー名")
@@ -112,12 +116,26 @@ func runRewrite(args []string) {
 	githubToken := args[0]
 	targetDir := "."
 	collaboratorConfig := ""
+	pushAll := false
 
-	if len(args) > 1 {
-		targetDir = args[1]
-	}
-	if len(args) > 2 {
-		collaboratorConfig = args[2]
+	// 引数を解析
+	for i := 1; i < len(args); i++ {
+		arg := args[i]
+		if arg == "--push-all" {
+			pushAll = true
+		} else if collaboratorConfig == "" && !strings.HasPrefix(arg, "--") {
+			if targetDir == "." {
+				targetDir = arg
+			} else {
+				collaboratorConfig = arg
+			}
+		} else if !strings.HasPrefix(arg, "--") {
+			if targetDir == "." {
+				targetDir = arg
+			} else if collaboratorConfig == "" {
+				collaboratorConfig = arg
+			}
+		}
 	}
 
 	// 環境変数をチェック
@@ -160,6 +178,12 @@ func runRewrite(args []string) {
 	} else {
 		gitRewriter = rewriter.NewRewriter(githubToken, githubUser, githubEmail)
 		fmt.Println("コラボレーター設定: 環境変数のみ使用")
+	}
+
+	// プッシュオプションを設定
+	gitRewriter.SetPushAllOption(pushAll)
+	if pushAll {
+		fmt.Println("🚀 --push-all オプションが有効です。プッシュ成功後に全ブランチ・タグをプッシュします。")
 	}
 
 	// 結果を追跡

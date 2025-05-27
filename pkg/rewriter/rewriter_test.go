@@ -149,3 +149,55 @@ func TestGenerateNewRemoteURLWithRepositoryOwner(t *testing.T) {
 		})
 	}
 }
+
+// TestSetPushAllOption はSetPushAllOptionメソッドをテストする
+func TestSetPushAllOption(t *testing.T) {
+	rewriter := NewRewriter("test-token", "testuser", "test@example.com")
+
+	// デフォルトはfalse
+	if rewriter.PushAll {
+		t.Error("デフォルトのPushAllはfalseであるべきです")
+	}
+
+	// trueに設定
+	rewriter.SetPushAllOption(true)
+	if !rewriter.PushAll {
+		t.Error("SetPushAllOption(true)後、PushAllはtrueであるべきです")
+	}
+
+	// falseに設定
+	rewriter.SetPushAllOption(false)
+	if rewriter.PushAll {
+		t.Error("SetPushAllOption(false)後、PushAllはfalseであるべきです")
+	}
+}
+
+// TestNewRewriterPushAllDefault は新しいRewriterのPushAllデフォルト値をテストする
+func TestNewRewriterPushAllDefault(t *testing.T) {
+	tests := []struct {
+		name       string
+		createFunc func() *Rewriter
+	}{
+		{
+			name: "NewRewriter",
+			createFunc: func() *Rewriter {
+				return NewRewriter("test-token", "testuser", "test@example.com")
+			},
+		},
+		{
+			name: "NewRewriterWithConfig",
+			createFunc: func() *Rewriter {
+				return NewRewriterWithConfig("test-token", "testuser", "test@example.com", "config.json")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rewriter := tt.createFunc()
+			if rewriter.PushAll {
+				t.Errorf("%s: デフォルトのPushAllはfalseであるべきです", tt.name)
+			}
+		})
+	}
+}
