@@ -120,6 +120,37 @@ func (c *Client) GetCurrentUser() (*User, error) {
 	return &user, nil
 }
 
+// IsOrganization は指定されたオーナーが組織かどうかを判定する
+func (c *Client) IsOrganization(owner string) (bool, error) {
+	if c.Token == "" {
+		return false, fmt.Errorf("GitHub トークンが設定されていません")
+	}
+
+	// まず組織として確認
+	url := fmt.Sprintf("https://api.github.com/orgs/%s", owner)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, err
+	}
+
+	req.Header.Set("Authorization", "token "+c.Token)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 200 {
+		return true, nil // 組織として存在
+	} else if resp.StatusCode == 404 {
+		return false, nil // 組織として存在しない（個人ユーザーの可能性）
+	}
+
+	return false, fmt.Errorf("組織確認エラー: %d - %s", resp.StatusCode, resp.Status)
+}
+
 // CreateRepo はリポジトリを作成する
 func (c *Client) CreateRepo(owner, repo string, private bool) error {
 	if c.Token == "" {
@@ -135,11 +166,28 @@ func (c *Client) CreateRepo(owner, repo string, private bool) error {
 	// リポジトリ作成のURL決定
 	var url string
 	if owner == currentUser.Login {
-		// 個人リポジトリ
+		// 現在のユーザーと同じ場合は個人リポジトリ
 		url = "https://api.github.com/user/repos"
+		fmt.Printf("個人リポジトリとして作成します: %s\n", owner)
 	} else {
-		// 組織リポジトリ
-		url = fmt.Sprintf("https://api.github.com/orgs/%s/repos", owner)
+		// 異なる場合は組織かどうかを確認
+		isOrg, err := c.IsOrganization(owner)
+		if err != nil {
+			fmt.Printf("⚠️  組織確認でエラーが発生しました: %v\n", err)
+			fmt.Printf("組織として試行します: %s\n", owner)
+			// エラーが発生した場合は組織として試行（フォールバック）
+			isOrg = true
+		}
+
+		if isOrg {
+			// 組織リポジトリ
+			url = fmt.Sprintf("https://api.github.com/orgs/%s/repos", owner)
+			fmt.Printf("組織リポジトリとして作成します: %s\n", owner)
+		} else {
+			// 個人ユーザーのリポジトリ（他のユーザー）
+			// この場合、現在のユーザーが他のユーザーのリポジトリを作成することはできない
+			return fmt.Errorf("他のユーザー '%s' のリポジトリを作成することはできません。組織名を確認してください", owner)
+		}
 	}
 
 	// リポジトリ作成データ

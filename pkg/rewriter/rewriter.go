@@ -102,7 +102,8 @@ fi
 
 // UpdateRemoteURL はリモートURLを更新する
 func (r *Rewriter) UpdateRemoteURL(gitDir string) error {
-	fmt.Printf("[2/2] Git remoteのorganization部分を%sに変更します...\n", r.GitHubUser)
+	targetOwner := utils.GetTargetOwner(r.GitHubUser)
+	fmt.Printf("[2/2] Git remoteのorganization部分を%sに変更します...\n", targetOwner)
 
 	// remote originが存在するかチェック
 	stdout, _, err := utils.RunCommand(gitDir, "git", "remote", "get-url", "origin")
@@ -135,15 +136,23 @@ func (r *Rewriter) UpdateRemoteURL(gitDir string) error {
 // generateNewRemoteURL は新しいリモートURLを生成する
 func (r *Rewriter) generateNewRemoteURL(remoteURL string) (string, error) {
 	owner, repo := utils.ExtractRepoInfoFromURL(remoteURL)
+	if os.Getenv("GIT_REWRITE_DEBUG") != "" {
+		fmt.Printf("デバッグ: URL解析結果 - URL: %s, Owner: '%s', Repo: '%s'\n", remoteURL, owner, repo)
+	}
 	if owner == "" || repo == "" {
-		return "", fmt.Errorf("remote URLが想定外の形式です: %s", remoteURL)
+		return "", fmt.Errorf("remote URLが想定外の形式です: %s (解析結果: owner='%s', repo='%s')", remoteURL, owner, repo)
+	}
+
+	targetOwner := utils.GetTargetOwner(r.GitHubUser)
+	if targetOwner != r.GitHubUser {
+		fmt.Printf("GITHUB_ORGANIZATION環境変数が設定されています: %s\n", targetOwner)
 	}
 
 	// HTTPS形式かSSH形式かを判定
 	if strings.HasPrefix(remoteURL, "https://") {
-		return fmt.Sprintf("https://github.com/%s/%s", r.GitHubUser, repo), nil
+		return fmt.Sprintf("https://github.com/%s/%s", targetOwner, repo), nil
 	} else if strings.HasPrefix(remoteURL, "git@") {
-		return fmt.Sprintf("git@github.com:%s/%s", r.GitHubUser, repo), nil
+		return fmt.Sprintf("git@github.com:%s/%s.git", targetOwner, repo), nil
 	}
 
 	return "", fmt.Errorf("サポートされていないURL形式: %s", remoteURL)
@@ -207,21 +216,27 @@ func (r *Rewriter) VerifyAndPushRemote(gitDir string) error {
 
 	// リモートURLからユーザー名とリポジトリ名を抽出
 	owner, repoName := utils.ExtractRepoInfoFromURL(remoteURL)
+	if os.Getenv("GIT_REWRITE_DEBUG") != "" {
+		fmt.Printf("デバッグ: VerifyAndPushRemote URL解析結果 - URL: %s, Owner: '%s', Repo: '%s'\n", remoteURL, owner, repoName)
+	}
 	if owner == "" || repoName == "" {
-		return fmt.Errorf("リモートURLからリポジトリ情報を抽出できませんでした: %s", remoteURL)
+		return fmt.Errorf("リモートURLからリポジトリ情報を抽出できませんでした: %s (解析結果: owner='%s', repo='%s')", remoteURL, owner, repoName)
 	}
 
 	fmt.Printf("リポジトリ情報: %s/%s\n", owner, repoName)
 
-	// リモートURLにGITHUB_USERが含まれているか確認
-	if !strings.Contains(remoteURL, r.GitHubUser) {
-		fmt.Printf("⚠️  警告: リモートリポジトリが %s に設定されていません。\n", r.GitHubUser)
-		fmt.Printf("   期待されるユーザー: %s\n", r.GitHubUser)
+	// 期待されるオーナーを決定
+	expectedOwner := utils.GetTargetOwner(r.GitHubUser)
+
+	// リモートURLに期待されるオーナーが含まれているか確認
+	if !strings.Contains(remoteURL, expectedOwner) {
+		fmt.Printf("⚠️  警告: リモートリポジトリが %s に設定されていません。\n", expectedOwner)
+		fmt.Printf("   期待されるオーナー: %s\n", expectedOwner)
 		fmt.Printf("   実際のURL: %s\n", remoteURL)
-		return fmt.Errorf("リモートリポジトリのユーザーが一致しません")
+		return fmt.Errorf("リモートリポジトリのオーナーが一致しません")
 	}
 
-	fmt.Printf("✓ リモートリポジトリが %s に設定されています。\n", r.GitHubUser)
+	fmt.Printf("✓ リモートリポジトリが %s に設定されています。\n", expectedOwner)
 
 	// GitHubリポジトリの存在確認
 	fmt.Println("GitHubリポジトリの存在を確認しています...")

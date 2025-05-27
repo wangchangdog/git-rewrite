@@ -165,3 +165,23 @@ func TestLoadCollaboratorConfig(t *testing.T) {
 		}
 	}
 }
+
+// TestIsOrganizationLogic は組織判定ロジックのテスト（モック）
+func TestIsOrganizationLogic(t *testing.T) {
+	// 実際のAPIを呼ばないモックテスト
+	// 実際のテストでは、HTTPクライアントをモックする必要があります
+
+	// ここでは基本的なロジックのテストのみ
+	client := NewClient("")
+
+	// トークンが空の場合のテスト
+	_, err := client.IsOrganization("test-org")
+	if err == nil {
+		t.Errorf("トークンが空の場合はエラーが発生するべきです")
+	}
+
+	expectedError := "GitHub トークンが設定されていません"
+	if err.Error() != expectedError {
+		t.Errorf("期待されるエラーメッセージ: %s, 実際: %s", expectedError, err.Error())
+	}
+}
