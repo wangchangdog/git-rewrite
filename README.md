@@ -37,7 +37,7 @@ export GITHUB_EMAIL="your-github-email@example.com"
 
 ```bash
 # 標準的なビルド
-go build -o git-rewrite-tools .
+go build -o git-rewrite .
 
 # Makefileを使用（推奨）
 make build
@@ -52,19 +52,19 @@ make deps build
 
 ```bash
 # ヘルプを表示
-./git-rewrite-tools
+./git-rewrite
 
 # 現在のディレクトリ以下のすべてのGitリポジトリを処理
-./git-rewrite-tools rewrite <github_token>
+./git-rewrite rewrite <github_token>
 
 # 特定のディレクトリを指定
-./git-rewrite-tools rewrite <github_token> /path/to/target/directory
+./git-rewrite rewrite <github_token> /path/to/target/directory
 
 # デモ機能の実行
-./git-rewrite-tools demo <github_token>
+./git-rewrite demo <github_token>
 
 # 内蔵テストの実行
-./git-rewrite-tools test
+./git-rewrite test
 ```
 
 ### 実行例
@@ -73,13 +73,13 @@ make deps build
 # 例1: 現在のディレクトリ以下のすべてのリポジトリを処理
 export GITHUB_USER="myusername"
 export GITHUB_EMAIL="myemail@example.com"
-./git-rewrite-tools rewrite ghp_xxxxxxxxxxxxxxxxxxxx
+./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx
 
 # 例2: 特定のプロジェクトディレクトリを処理
-./git-rewrite-tools rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects
+./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects
 
 # 例3: デモ機能でテスト実行
-./git-rewrite-tools demo ghp_xxxxxxxxxxxxxxxxxxxx
+./git-rewrite demo ghp_xxxxxxxxxxxxxxxxxxxx
 ```
 
 ## 🧪 テスト
@@ -192,15 +192,15 @@ make build-release
 ```
 
 生成されるバイナリ：
-- `git-rewrite-tools-darwin-amd64` (macOS Intel)
-- `git-rewrite-tools-darwin-arm64` (macOS Apple Silicon)
-- `git-rewrite-tools-linux-amd64` (Linux)
-- `git-rewrite-tools-windows-amd64.exe` (Windows)
+- `git-rewrite-darwin-amd64` (macOS Intel)
+- `git-rewrite-darwin-arm64` (macOS Apple Silicon)
+- `git-rewrite-linux-amd64` (Linux)
+- `git-rewrite-windows-amd64.exe` (Windows)
 
 ## 📁 プロジェクト構造
 
 ```
-git-rewrite-tools/
+git-rewrite/
 ├── 📄 main.go                 # メインエントリーポイント
 ├── 🧪 main_test.go           # メイン関数のテスト
 ├── 🔧 Makefile               # ビルド・テスト自動化
@@ -224,21 +224,21 @@ git-rewrite-tools/
 # 会社のメールアドレスから個人のメールアドレスに一括変更
 export GITHUB_USER="personal-account"
 export GITHUB_EMAIL="personal@example.com"
-./git-rewrite-tools rewrite <token> ~/work-projects
+./git-rewrite rewrite <token> ~/work-projects
 ```
 
 ### 2. 複数プロジェクトの統一
 
 ```bash
 # 複数のプロジェクトのauthor情報を統一
-./git-rewrite-tools rewrite <token> ~/all-projects
+./git-rewrite rewrite <token> ~/all-projects
 ```
 
 ### 3. 新しいGitHubアカウントへの移行
 
 ```bash
 # 既存のリポジトリを新しいGitHubアカウントに移行
-./git-rewrite-tools rewrite <new-account-token> ~/repositories
+./git-rewrite rewrite <new-account-token> ~/repositories
 ```
 
 ## 🔒 セキュリティ
@@ -356,10 +356,10 @@ make clean build
 go test -v ./...
 
 # 内蔵テストでの動作確認
-./git-rewrite-tools test
+./git-rewrite test
 
 # デモ機能での動作確認
-./git-rewrite-tools demo <token>
+./git-rewrite demo <token>
 ```
 
 ## 📞 サポート
