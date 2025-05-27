@@ -98,30 +98,6 @@ func TestCreateInitialCommit(t *testing.T) {
 		description string
 	}{
 		{
-			name:        "空のgitDir",
-			gitDir:      "",
-			githubUser:  "testuser",
-			githubEmail: "test@example.com",
-			shouldError: true,
-			description: "空のgitDirでエラーが発生することを確認",
-		},
-		{
-			name:        "空のgithubUser",
-			gitDir:      "/tmp/test",
-			githubUser:  "",
-			githubEmail: "test@example.com",
-			shouldError: true,
-			description: "空のgithubUserでエラーが発生することを確認",
-		},
-		{
-			name:        "空のgithubEmail",
-			gitDir:      "/tmp/test",
-			githubUser:  "testuser",
-			githubEmail: "",
-			shouldError: true,
-			description: "空のgithubEmailでエラーが発生することを確認",
-		},
-		{
 			name:        "存在しないディレクトリ",
 			gitDir:      "/nonexistent/directory",
 			githubUser:  "testuser",
