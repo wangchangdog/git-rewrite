@@ -224,7 +224,7 @@ func (c *Client) CreateRepo(owner, repo string, private bool) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 201 {
-		fmt.Printf("✓ GitHubリポジトリ %s/%s を作成しました。\n", owner, repo)
+		fmt.Printf("✅ GitHubリポジトリ %s/%s を作成しました。\n", owner, repo)
 		return nil
 	}
 
@@ -265,7 +265,7 @@ func (c *Client) AddCollaborator(owner, repo, username, permission string) error
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 201 || resp.StatusCode == 204 {
-		fmt.Printf("✓ コラボレーター %s を %s/%s に追加しました（権限: %s）\n", username, owner, repo, permission)
+		fmt.Printf("✅ コラボレーター %s を %s/%s に追加しました（権限: %s）\n", username, owner, repo, permission)
 		return nil
 	}
 
@@ -340,13 +340,13 @@ func (c *Client) GetCollaborators(configPath, repoName string) []Collaborator {
 			// デフォルトコラボレーターを追加
 			collaborators = append(collaborators, config.DefaultCollaborators...)
 			if len(config.DefaultCollaborators) > 0 {
-				fmt.Printf("✓ 設定ファイルから %d 人のデフォルトコラボレーターを読み込みました\n", len(config.DefaultCollaborators))
+				fmt.Printf("✅ 設定ファイルから %d 人のデフォルトコラボレーターを読み込みました\n", len(config.DefaultCollaborators))
 			}
 
 			// プロジェクト固有のコラボレーターを追加
 			if projectCollaborators, exists := config.ProjectCollaborators[repoName]; exists {
 				collaborators = append(collaborators, projectCollaborators...)
-				fmt.Printf("✓ 設定ファイルから %d 人のプロジェクト固有コラボレーターを読み込みました\n", len(projectCollaborators))
+				fmt.Printf("✅ 設定ファイルから %d 人のプロジェクト固有コラボレーターを読み込みました\n", len(projectCollaborators))
 			}
 		} else {
 			fmt.Printf("⚠️  設定ファイル読み込みエラー: %v\n", err)
@@ -357,7 +357,7 @@ func (c *Client) GetCollaborators(configPath, repoName string) []Collaborator {
 	envCollaborators := ParseCollaboratorsFromEnv()
 	if len(envCollaborators) > 0 {
 		collaborators = append(collaborators, envCollaborators...)
-		fmt.Printf("✓ 環境変数から %d 人のコラボレーターを読み込みました\n", len(envCollaborators))
+		fmt.Printf("✅ 環境変数から %d 人のコラボレーターを読み込みました\n", len(envCollaborators))
 	}
 
 	// 重複を除去（後から追加されたものが優先される）
@@ -390,7 +390,7 @@ func (c *Client) CreateRepoWithCollaborators(owner, repo string, private bool, c
 		}
 	}
 
-	fmt.Printf("✓ %d/%d 人のコラボレーターを正常に追加しました\n", successCount, len(collaborators))
+	fmt.Printf("✅ %d/%d 人のコラボレーターを正常に追加しました\n", successCount, len(collaborators))
 	return nil
 }
 

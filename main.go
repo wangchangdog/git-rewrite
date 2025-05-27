@@ -175,7 +175,7 @@ func runRewrite(args []string) {
 
 		if result.Success {
 			successCount++
-			fmt.Printf("✓ %s の全処理が完了しました。\n", gitDir)
+			fmt.Printf("✅ %s の全処理が完了しました。\n", gitDir)
 		} else if result.HistoryRewritten {
 			pushFailedRepos = append(pushFailedRepos, gitDir)
 			fmt.Printf("⚠️  %s の履歴書き換えは成功しましたが、プッシュに失敗しました。\n", gitDir)

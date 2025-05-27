@@ -91,7 +91,7 @@ func RunDemo(githubToken string) error {
 		if err := client.CreateRepoWithCollaborators(owner, repoName, true, ""); err != nil {
 			fmt.Printf("   ✗ リポジトリの作成に失敗しました: %v\n", err)
 		} else {
-			fmt.Println("   ✓ リポジトリが正常に作成されました。")
+			fmt.Println("   ✅ リポジトリが正常に作成されました。")
 
 			// 作成後の存在確認
 			fmt.Println("\n4. 作成後の存在確認:")
@@ -106,7 +106,7 @@ func RunDemo(githubToken string) error {
 			if _, _, err := utils.RunCommand(tempDir, "git", "push", "-u", "origin", "master"); err != nil {
 				fmt.Printf("   ✗ プッシュに失敗しました: %v\n", err)
 			} else {
-				fmt.Println("   ✓ プッシュが正常に完了しました。")
+				fmt.Println("   ✅ プッシュが正常に完了しました。")
 			}
 		}
 	} else {
@@ -153,7 +153,7 @@ func RunEmptyRepoDemo(githubUser, githubEmail string) error {
 		return err
 	}
 
-	fmt.Println("   ✓ 初期コミットが正常に作成されました。")
+	fmt.Println("   ✅ 初期コミットが正常に作成されました。")
 
 	// コミット確認
 	stdout, _, err := utils.RunCommand(tempDir, "git", "log", "--oneline", "-1")
@@ -165,7 +165,7 @@ func RunEmptyRepoDemo(githubUser, githubEmail string) error {
 	// README.mdの確認
 	readmePath := filepath.Join(tempDir, "README.md")
 	if utils.FileExists(readmePath) {
-		fmt.Println("   ✓ README.mdファイルが作成されました。")
+		fmt.Println("   ✅ README.mdファイルが作成されました。")
 		content, err := os.ReadFile(readmePath)
 		if err != nil {
 			return fmt.Errorf("README.md読み取りエラー: %v", err)

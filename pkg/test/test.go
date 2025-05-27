@@ -39,7 +39,7 @@ func testUtilityFunctions() error {
 	if result != "こんにちは" {
 		return fmt.Errorf("SafeDecode テスト失敗: 期待値 'こんにちは', 実際 '%s'", result)
 	}
-	fmt.Println("   ✓ SafeDecode テスト成功")
+	fmt.Println("   ✅ SafeDecode テスト成功")
 
 	// ExtractRepoInfoFromURL テスト
 	fmt.Println("2. ExtractRepoInfoFromURL テスト:")
@@ -69,7 +69,7 @@ func testUtilityFunctions() error {
 			}
 		}
 	}
-	fmt.Println("   ✓ ExtractRepoInfoFromURL テスト成功")
+	fmt.Println("   ✅ ExtractRepoInfoFromURL テスト成功")
 
 	// FileExists テスト
 	fmt.Println("3. FileExists テスト:")
@@ -87,7 +87,7 @@ func testUtilityFunctions() error {
 	if utils.FileExists("/nonexistent/file/path") {
 		return fmt.Errorf("FileExists テスト失敗: 存在しないファイルが検出された")
 	}
-	fmt.Println("   ✓ FileExists テスト成功")
+	fmt.Println("   ✅ FileExists テスト成功")
 
 	return nil
 }
@@ -114,7 +114,7 @@ func testGitOperations() error {
 	if !strings.Contains(stdout, "Initialized") && !strings.Contains(stderr, "Initialized") {
 		return fmt.Errorf("git init の出力が期待されるものと異なる: %s", stdout)
 	}
-	fmt.Println("   ✓ Git リポジトリ初期化成功")
+	fmt.Println("   ✅ Git リポジトリ初期化成功")
 
 	// ファイル作成とコミット
 	fmt.Println("2. ファイル作成とコミットテスト:")
@@ -134,7 +134,7 @@ func testGitOperations() error {
 	if err != nil {
 		return fmt.Errorf("git commit 失敗: %v, stderr: %s", err, stderr)
 	}
-	fmt.Println("   ✓ ファイル作成とコミット成功")
+	fmt.Println("   ✅ ファイル作成とコミット成功")
 
 	// リモート設定テスト
 	fmt.Println("3. リモート設定テスト:")
@@ -153,7 +153,7 @@ func testGitOperations() error {
 	if strings.TrimSpace(stdout) != expectedURL {
 		return fmt.Errorf("リモートURL が期待値と異なる: 期待値 '%s', 実際 '%s'", expectedURL, strings.TrimSpace(stdout))
 	}
-	fmt.Println("   ✓ リモート設定成功")
+	fmt.Println("   ✅ リモート設定成功")
 
 	// FindGitDirs テスト
 	fmt.Println("4. FindGitDirs テスト:")
@@ -169,7 +169,7 @@ func testGitOperations() error {
 	if gitDirs[0] != tempDir {
 		return fmt.Errorf("FindGitDirs テスト失敗: 期待値 '%s', 実際 '%s'", tempDir, gitDirs[0])
 	}
-	fmt.Println("   ✓ FindGitDirs テスト成功")
+	fmt.Println("   ✅ FindGitDirs テスト成功")
 
 	return nil
 }

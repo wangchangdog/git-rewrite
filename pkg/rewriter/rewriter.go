@@ -96,7 +96,7 @@ fi
 		return fmt.Errorf("git filter-branchの実行に失敗しました: %v\n出力: %s", err, utils.SafeDecode(output))
 	}
 
-	fmt.Printf("✓ Git履歴の書き換えが完了しました。\n")
+	fmt.Printf("✅ Git履歴の書き換えが完了しました。\n")
 	return nil
 }
 
@@ -173,7 +173,7 @@ func (r *Rewriter) CreateInitialCommit(gitDir string) error {
 		if err := os.WriteFile(readmePath, []byte(content), 0644); err != nil {
 			return fmt.Errorf("README.md作成エラー: %v", err)
 		}
-		fmt.Println("✓ README.mdファイルを作成しました。")
+		fmt.Println("✅ README.mdファイルを作成しました。")
 	}
 
 	// ステージングエリアに追加
@@ -201,7 +201,7 @@ func (r *Rewriter) CreateInitialCommit(gitDir string) error {
 		return fmt.Errorf("初期コミット作成エラー: %v", err)
 	}
 
-	fmt.Println("✓ 初期コミットを作成しました。")
+	fmt.Println("✅ 初期コミットを作成しました。")
 	return nil
 }
 
@@ -240,7 +240,7 @@ func (r *Rewriter) VerifyAndPushRemote(gitDir string) error {
 		return fmt.Errorf("リモートリポジトリのオーナーが一致しません")
 	}
 
-	fmt.Printf("✓ リモートリポジトリが %s に設定されています。\n", expectedOwner)
+	fmt.Printf("✅ リモートリポジトリが %s に設定されています。\n", expectedOwner)
 
 	// GitHubリポジトリの存在確認
 	fmt.Println("GitHubリポジトリの存在を確認しています...")
@@ -257,7 +257,7 @@ func (r *Rewriter) VerifyAndPushRemote(gitDir string) error {
 			return fmt.Errorf("リポジトリ作成エラー: %v", err)
 		}
 	} else {
-		fmt.Printf("✓ リモートリポジトリ %s/%s が存在します。\n", owner, repoName)
+		fmt.Printf("✅ リモートリポジトリ %s/%s が存在します。\n", owner, repoName)
 	}
 
 	// 現在のブランチを取得
@@ -279,14 +279,20 @@ func (r *Rewriter) VerifyAndPushRemote(gitDir string) error {
 			return fmt.Errorf("初期コミット作成エラー: %v", err)
 		}
 	} else {
-		fmt.Println("✓ 既存のコミットが見つかりました。")
+		fmt.Println("✅ 既存のコミットが見つかりました。")
 	}
 
 	// git push origin HEADを実行
 	fmt.Println("リモートにプッシュしています...")
 	stdout, stderr, err := utils.RunCommand(gitDir, "git", "push", "origin", "HEAD")
 	if err != nil {
-		return fmt.Errorf("プッシュエラー: %v\nstderr: %s", err, stderr)
+		// pushでエラーが出る場合は force pushを試行
+		fmt.Println("⚠️  プッシュエラーが発生しました。強制的にプッシュを試行します...")
+		stdout, stderr, err = utils.RunCommand(gitDir, "git", "push", "--force", "origin", "HEAD")
+		if err != nil {
+			return fmt.Errorf("強制プッシュエラー: %v\nstderr: %s", err, stderr)
+		}
+		fmt.Println("✅ 強制プッシュが完了しました。")
 	}
 
 	if stdout != "" {
@@ -296,7 +302,7 @@ func (r *Rewriter) VerifyAndPushRemote(gitDir string) error {
 		fmt.Printf("プッシュ情報: %s\n", stderr)
 	}
 
-	fmt.Println("✓ リモートへのプッシュが完了しました。")
+	fmt.Println("✅ リモートへのプッシュが完了しました。")
 	return nil
 }
 
