@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"os"
 	"testing"
 )
 
@@ -83,6 +84,22 @@ func TestExtractRepoInfoFromURL(t *testing.T) {
 }
 
 func TestGetTargetOwner(t *testing.T) {
+	// 環境変数をクリーンアップ
+	originalOwner := os.Getenv("GITHUB_REPOSITORY_OWNER")
+	originalOrg := os.Getenv("GITHUB_ORGANIZATION")
+	defer func() {
+		if originalOwner != "" {
+			os.Setenv("GITHUB_REPOSITORY_OWNER", originalOwner)
+		} else {
+			os.Unsetenv("GITHUB_REPOSITORY_OWNER")
+		}
+		if originalOrg != "" {
+			os.Setenv("GITHUB_ORGANIZATION", originalOrg)
+		} else {
+			os.Unsetenv("GITHUB_ORGANIZATION")
+		}
+	}()
+
 	tests := []struct {
 		name        string
 		repoOwner   string
@@ -122,12 +139,16 @@ func TestGetTargetOwner(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// テスト用に環境変数をクリア
+			os.Unsetenv("GITHUB_REPOSITORY_OWNER")
+			os.Unsetenv("GITHUB_ORGANIZATION")
+
 			// 環境変数を設定
 			if tt.repoOwner != "" {
-				t.Setenv("GITHUB_REPOSITORY_OWNER", tt.repoOwner)
+				os.Setenv("GITHUB_REPOSITORY_OWNER", tt.repoOwner)
 			}
 			if tt.orgValue != "" {
-				t.Setenv("GITHUB_ORGANIZATION", tt.orgValue)
+				os.Setenv("GITHUB_ORGANIZATION", tt.orgValue)
 			}
 
 			result := GetTargetOwner(tt.defaultUser, tt.repoOwner, tt.orgValue)
@@ -140,6 +161,16 @@ func TestGetTargetOwner(t *testing.T) {
 }
 
 func TestIsPersonalRepository(t *testing.T) {
+	// 環境変数をクリーンアップ
+	originalOwner := os.Getenv("GITHUB_REPOSITORY_OWNER")
+	defer func() {
+		if originalOwner != "" {
+			os.Setenv("GITHUB_REPOSITORY_OWNER", originalOwner)
+		} else {
+			os.Unsetenv("GITHUB_REPOSITORY_OWNER")
+		}
+	}()
+
 	tests := []struct {
 		name      string
 		repoOwner string
@@ -159,8 +190,11 @@ func TestIsPersonalRepository(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// テスト用に環境変数をクリア
+			os.Unsetenv("GITHUB_REPOSITORY_OWNER")
+
 			if tt.repoOwner != "" {
-				t.Setenv("GITHUB_REPOSITORY_OWNER", tt.repoOwner)
+				os.Setenv("GITHUB_REPOSITORY_OWNER", tt.repoOwner)
 			}
 
 			result := IsPersonalRepository(tt.repoOwner)
