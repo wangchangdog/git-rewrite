@@ -70,6 +70,15 @@ func showHelp() {
 	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects")
 	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects collaborators.json")
 	fmt.Println("  git-rewrite demo ghp_xxxxxxxxxxxxxxxxxxxx")
+	fmt.Println("")
+	fmt.Println("コラボレーター設定例:")
+	fmt.Println("  # 環境変数で設定")
+	fmt.Println("  export GITHUB_COLLABORATORS=\"dev1:push,admin1:admin,viewer1:pull\"")
+	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx")
+	fmt.Println("")
+	fmt.Println("  # 設定ファイルで設定")
+	fmt.Println("  echo '{\"default_collaborators\":[{\"username\":\"dev1\",\"permission\":\"push\"}]}' > collaborators.json")
+	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects collaborators.json")
 }
 
 func runRewrite(args []string) {
