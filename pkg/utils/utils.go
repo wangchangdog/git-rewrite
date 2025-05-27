@@ -33,19 +33,23 @@ func ExtractRepoInfoFromURL(remoteURL string) (string, string) {
 	// HTTPS形式: https://github.com/user/repo.git
 	httpsRegex := regexp.MustCompile(`https://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$`)
 	if matches := httpsRegex.FindStringSubmatch(remoteURL); matches != nil {
+		owner := strings.TrimSpace(matches[1])
+		repo := strings.TrimSpace(matches[2])
 		if debug {
-			fmt.Printf("デバッグ: HTTPS形式でマッチ - Owner: '%s', Repo: '%s'\n", matches[1], matches[2])
+			fmt.Printf("デバッグ: HTTPS形式でマッチ - Owner: '%s', Repo: '%s'\n", owner, repo)
 		}
-		return matches[1], matches[2]
+		return owner, repo
 	}
 
 	// SSH形式: git@github.com:user/repo.git
 	sshRegex := regexp.MustCompile(`git@github\.com:([^/]+)/([^/\s]+?)(?:\.git)?/?$`)
 	if matches := sshRegex.FindStringSubmatch(remoteURL); matches != nil {
+		owner := strings.TrimSpace(matches[1])
+		repo := strings.TrimSpace(matches[2])
 		if debug {
-			fmt.Printf("デバッグ: SSH形式でマッチ - Owner: '%s', Repo: '%s'\n", matches[1], matches[2])
+			fmt.Printf("デバッグ: SSH形式でマッチ - Owner: '%s', Repo: '%s'\n", owner, repo)
 		}
-		return matches[1], matches[2]
+		return owner, repo
 	}
 
 	if debug {
@@ -118,20 +122,20 @@ func FileExists(filename string) bool {
 func GetTargetOwner(defaultUser, owner, organization string) string {
 	// 引数で指定された個人リポジトリ所有者が最優先
 	if owner != "" {
-		return owner
+		return strings.TrimSpace(owner)
 	}
 	// 次に引数で指定された組織
 	if organization != "" {
-		return organization
+		return strings.TrimSpace(organization)
 	}
 	// 環境変数からのフォールバック（後方互換性）
 	if repoOwner := os.Getenv("GITHUB_REPOSITORY_OWNER"); repoOwner != "" {
-		return repoOwner
+		return strings.TrimSpace(repoOwner)
 	}
 	if githubOrg := os.Getenv("GITHUB_ORGANIZATION"); githubOrg != "" {
-		return githubOrg
+		return strings.TrimSpace(githubOrg)
 	}
-	return defaultUser
+	return strings.TrimSpace(defaultUser)
 }
 
 // IsPersonalRepository は個人リポジトリかどうかを判定する
