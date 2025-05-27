@@ -305,3 +305,44 @@ func TestNewRewriterDefaults(t *testing.T) {
 		})
 	}
 }
+
+// TestRewriterTokenStorage はRewriterがトークンを正しく保存することをテストする
+func TestRewriterTokenStorage(t *testing.T) {
+	token := "ghp_test123456"
+	user := "testuser"
+	email := "test@example.com"
+
+	tests := []struct {
+		name       string
+		createFunc func() *Rewriter
+	}{
+		{
+			name: "NewRewriter",
+			createFunc: func() *Rewriter {
+				return NewRewriter(token, user, email)
+			},
+		},
+		{
+			name: "NewRewriterWithConfig",
+			createFunc: func() *Rewriter {
+				return NewRewriterWithConfig(token, user, email, "config.json")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rewriter := tt.createFunc()
+
+			if rewriter.GitHubToken != token {
+				t.Errorf("GitHubTokenが正しく設定されていません。期待値: %s, 実際: %s", token, rewriter.GitHubToken)
+			}
+			if rewriter.GitHubUser != user {
+				t.Errorf("GitHubUserが正しく設定されていません。期待値: %s, 実際: %s", user, rewriter.GitHubUser)
+			}
+			if rewriter.GitHubEmail != email {
+				t.Errorf("GitHubEmailが正しく設定されていません。期待値: %s, 実際: %s", email, rewriter.GitHubEmail)
+			}
+		})
+	}
+}

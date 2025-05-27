@@ -23,6 +23,7 @@ type RewriteResult struct {
 // Rewriter はGit履歴書き換えを行う
 type Rewriter struct {
 	GitHubClient           *github.Client
+	GitHubToken            string
 	GitHubUser             string
 	GitHubEmail            string
 	CollaboratorConfigPath string
@@ -37,6 +38,7 @@ type Rewriter struct {
 func NewRewriter(githubToken, githubUser, githubEmail string) *Rewriter {
 	return &Rewriter{
 		GitHubClient:           github.NewClient(githubToken),
+		GitHubToken:            githubToken,
 		GitHubUser:             githubUser,
 		GitHubEmail:            githubEmail,
 		CollaboratorConfigPath: "", // デフォルトは空（環境変数のみ使用）
@@ -49,6 +51,7 @@ func NewRewriter(githubToken, githubUser, githubEmail string) *Rewriter {
 func NewRewriterWithConfig(githubToken, githubUser, githubEmail, configPath string) *Rewriter {
 	return &Rewriter{
 		GitHubClient:           github.NewClient(githubToken),
+		GitHubToken:            githubToken,
 		GitHubUser:             githubUser,
 		GitHubEmail:            githubEmail,
 		CollaboratorConfigPath: configPath,
@@ -320,13 +323,13 @@ func (r *Rewriter) VerifyAndPushRemote(gitDir string) error {
 		fmt.Println("✅ 既存のコミットが見つかりました。")
 	}
 
-	// git push origin HEADを実行
+	// git push origin HEADを実行（トークン認証使用）
 	fmt.Println("リモートにプッシュしています...")
-	stdout, stderr, err := utils.RunCommand(gitDir, "git", "push", "origin", "HEAD")
+	stdout, stderr, err := utils.RunGitPushWithToken(gitDir, r.GitHubToken, "origin", "HEAD")
 	if err != nil {
 		// pushでエラーが出る場合は force pushを試行
 		fmt.Println("⚠️  プッシュエラーが発生しました。強制的にプッシュを試行します...")
-		stdout, stderr, err = utils.RunCommand(gitDir, "git", "push", "--force", "origin", "HEAD")
+		stdout, stderr, err = utils.RunGitPushWithToken(gitDir, r.GitHubToken, "--force", "origin", "HEAD")
 		if err != nil {
 			return fmt.Errorf("強制プッシュエラー: %v\nstderr: %s", err, stderr)
 		}
@@ -356,13 +359,13 @@ func (r *Rewriter) VerifyAndPushRemote(gitDir string) error {
 func (r *Rewriter) PushAllBranchesAndTags(gitDir string) error {
 	fmt.Println("\n--- 全ブランチ・タグのプッシュ ---")
 
-	// 全ブランチをプッシュ
+	// 全ブランチをプッシュ（トークン認証使用）
 	fmt.Println("🌿 全ブランチをプッシュしています...")
-	stdout, stderr, err := utils.RunCommand(gitDir, "git", "push", "--all", "origin")
+	stdout, stderr, err := utils.RunGitPushWithToken(gitDir, r.GitHubToken, "--all", "origin")
 	if err != nil {
 		// エラーが発生した場合でも、強制プッシュを試行
 		fmt.Println("⚠️  通常のブランチプッシュでエラーが発生しました。強制プッシュを試行します...")
-		stdout, stderr, err = utils.RunCommand(gitDir, "git", "push", "--force", "--all", "origin")
+		stdout, stderr, err = utils.RunGitPushWithToken(gitDir, r.GitHubToken, "--force", "--all", "origin")
 		if err != nil {
 			fmt.Printf("❌ 全ブランチの強制プッシュに失敗しました: %v\n", err)
 			if stderr != "" {
@@ -380,13 +383,13 @@ func (r *Rewriter) PushAllBranchesAndTags(gitDir string) error {
 		fmt.Printf("ブランチプッシュ結果: %s\n", stdout)
 	}
 
-	// 全タグをプッシュ
+	// 全タグをプッシュ（トークン認証使用）
 	fmt.Println("🏷️  全タグをプッシュしています...")
-	stdout, stderr, err = utils.RunCommand(gitDir, "git", "push", "--tags", "origin")
+	stdout, stderr, err = utils.RunGitPushWithToken(gitDir, r.GitHubToken, "--tags", "origin")
 	if err != nil {
 		// エラーが発生した場合でも、強制プッシュを試行
 		fmt.Println("⚠️  通常のタグプッシュでエラーが発生しました。強制プッシュを試行します...")
-		stdout, stderr, err = utils.RunCommand(gitDir, "git", "push", "--force", "--tags", "origin")
+		stdout, stderr, err = utils.RunGitPushWithToken(gitDir, r.GitHubToken, "--force", "--tags", "origin")
 		if err != nil {
 			fmt.Printf("❌ 全タグの強制プッシュに失敗しました: %v\n", err)
 			if stderr != "" {

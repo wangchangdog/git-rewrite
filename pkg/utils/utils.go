@@ -143,3 +143,62 @@ func IsPersonalRepository(owner string) bool {
 	// 環境変数からのフォールバック（後方互換性）
 	return os.Getenv("GITHUB_REPOSITORY_OWNER") != ""
 }
+
+// RunCommandWithToken はGitHubトークンを使用してgitコマンドを実行する
+func RunCommandWithToken(dir, token string, command string, args ...string) (string, string, error) {
+	if command != "git" || len(args) == 0 || args[0] != "push" {
+		// git push以外のコマンドは通常通り実行
+		return RunCommand(dir, command, args...)
+	}
+
+	// git pushの場合はトークン認証を使用
+	return RunGitPushWithToken(dir, token, args[1:]...)
+}
+
+// RunGitPushWithToken はGitHubトークンを使用してgit pushを実行する
+func RunGitPushWithToken(dir, token string, pushArgs ...string) (string, string, error) {
+	if token == "" {
+		// トークンが空の場合は通常のpushを実行
+		return RunCommand(dir, "git", append([]string{"push"}, pushArgs...)...)
+	}
+
+	// 現在のリモートURLを取得
+	originalURL, _, err := RunCommand(dir, "git", "remote", "get-url", "origin")
+	if err != nil {
+		return "", "", fmt.Errorf("リモートURL取得エラー: %v", err)
+	}
+	originalURL = strings.TrimSpace(originalURL)
+
+	// トークン付きHTTPS URLに変換
+	tokenURL, err := ConvertToTokenURL(originalURL, token)
+	if err != nil {
+		return "", "", fmt.Errorf("トークンURL変換エラー: %v", err)
+	}
+
+	// 一時的にリモートURLを変更
+	if _, _, err := RunCommand(dir, "git", "remote", "set-url", "origin", tokenURL); err != nil {
+		return "", "", fmt.Errorf("リモートURL設定エラー: %v", err)
+	}
+
+	// プッシュを実行
+	stdout, stderr, pushErr := RunCommand(dir, "git", append([]string{"push"}, pushArgs...)...)
+
+	// リモートURLを元に戻す
+	if _, _, err := RunCommand(dir, "git", "remote", "set-url", "origin", originalURL); err != nil {
+		fmt.Printf("⚠️  リモートURL復元エラー: %v\n", err)
+	}
+
+	return stdout, stderr, pushErr
+}
+
+// ConvertToTokenURL はGitリモートURLをトークン付きHTTPS URLに変換する
+func ConvertToTokenURL(remoteURL, token string) (string, error) {
+	owner, repo := ExtractRepoInfoFromURL(remoteURL)
+	if owner == "" || repo == "" {
+		return "", fmt.Errorf("無効なリモートURL: %s", remoteURL)
+	}
+
+	// トークン付きHTTPS URLを生成
+	// 形式: https://token@github.com/owner/repo.git
+	return fmt.Sprintf("https://%s@github.com/%s/%s.git", token, owner, repo), nil
+}

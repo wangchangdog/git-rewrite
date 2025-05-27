@@ -346,7 +346,7 @@ func runDemo(args []string) {
 		osExit(1)
 	}
 
-	if err := demo.RunEmptyRepoDemo(config.GitHubUser, config.GitHubEmail); err != nil {
+	if err := demo.RunEmptyRepoDemo(config.GitHubToken, config.GitHubUser, config.GitHubEmail); err != nil {
 		fmt.Printf("空のリポジトリデモエラー: %v\n", err)
 		osExit(1)
 	}

@@ -101,9 +101,9 @@ func RunDemo(githubToken string) error {
 			}
 			fmt.Printf("   存在確認結果: %s\n", map[bool]string{true: "存在する", false: "存在しない"}[existsAfter])
 
-			// プッシュのテスト
+			// プッシュのテスト（トークン認証使用）
 			fmt.Println("\n5. プッシュテスト:")
-			if _, _, err := utils.RunCommand(tempDir, "git", "push", "-u", "origin", "master"); err != nil {
+			if _, _, err := utils.RunGitPushWithToken(tempDir, githubToken, "-u", "origin", "master"); err != nil {
 				fmt.Printf("   ✗ プッシュに失敗しました: %v\n", err)
 			} else {
 				fmt.Println("   ✅ プッシュが正常に完了しました。")
@@ -120,7 +120,7 @@ func RunDemo(githubToken string) error {
 }
 
 // RunEmptyRepoDemo は空のリポジトリでの初期コミット作成テストを実行する
-func RunEmptyRepoDemo(githubUser, githubEmail string) error {
+func RunEmptyRepoDemo(githubToken, githubUser, githubEmail string) error {
 	// 空のリポジトリでの初期コミット作成テスト
 	fmt.Println("\n=== 空のリポジトリでの初期コミット作成テスト ===")
 
@@ -147,7 +147,7 @@ func RunEmptyRepoDemo(githubUser, githubEmail string) error {
 
 	// 初期コミット作成テスト
 	fmt.Println("\n6. 初期コミット作成テスト:")
-	rewriter := rewriter.NewRewriter("", githubUser, githubEmail)
+	rewriter := rewriter.NewRewriter(githubToken, githubUser, githubEmail)
 	if err := rewriter.CreateInitialCommit(tempDir); err != nil {
 		fmt.Printf("   ✗ 初期コミットの作成に失敗しました: %v\n", err)
 		return err
