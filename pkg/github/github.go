@@ -230,6 +230,26 @@ func (c *Client) CreateRepo(owner, repo string, private bool) error {
 	}
 
 	body, _ := io.ReadAll(resp.Body)
+
+	// 422エラーでリポジトリ名が既に存在する場合の特別処理
+	if resp.StatusCode == 422 {
+		var errorResponse map[string]interface{}
+		if err := json.Unmarshal(body, &errorResponse); err == nil {
+			if errors, ok := errorResponse["errors"].([]interface{}); ok {
+				for _, errorItem := range errors {
+					if errorMap, ok := errorItem.(map[string]interface{}); ok {
+						if field, ok := errorMap["field"].(string); ok && field == "name" {
+							if code, ok := errorMap["code"].(string); ok && code == "custom" {
+								fmt.Printf("⚠️  リポジトリ %s/%s は既に存在します。既存のリポジトリを使用します。\n", owner, repo)
+								return nil // エラーではなく正常終了として扱う
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	return fmt.Errorf("リポジトリ作成エラー: %d - %s\n詳細: %s", resp.StatusCode, resp.Status, string(body))
 }
 

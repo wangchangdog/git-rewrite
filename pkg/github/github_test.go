@@ -185,3 +185,37 @@ func TestIsOrganizationLogic(t *testing.T) {
 		t.Errorf("期待されるエラーメッセージ: %s, 実際: %s", expectedError, err.Error())
 	}
 }
+
+// TestCreateRepoErrorHandling はリポジトリ作成時のエラーハンドリングのテスト
+func TestCreateRepoErrorHandling(t *testing.T) {
+	// 実際のAPIを呼ばないモックテスト
+	client := NewClient("")
+
+	// トークンが空の場合のテスト
+	err := client.CreateRepo("test-owner", "test-repo", true)
+	if err == nil {
+		t.Errorf("トークンが空の場合はエラーが発生するべきです")
+	}
+
+	expectedError := "GitHub トークンが設定されていません"
+	if err.Error() != expectedError {
+		t.Errorf("期待されるエラーメッセージ: %s, 実際: %s", expectedError, err.Error())
+	}
+}
+
+// TestCreateRepoWithCollaboratorsErrorHandling はコラボレーター付きリポジトリ作成時のエラーハンドリングのテスト
+func TestCreateRepoWithCollaboratorsErrorHandling(t *testing.T) {
+	// 実際のAPIを呼ばないモックテスト
+	client := NewClient("")
+
+	// トークンが空の場合のテスト
+	err := client.CreateRepoWithCollaborators("test-owner", "test-repo", true, "")
+	if err == nil {
+		t.Errorf("トークンが空の場合はエラーが発生するべきです")
+	}
+
+	expectedError := "GitHub トークンが設定されていません"
+	if err.Error() != expectedError {
+		t.Errorf("期待されるエラーメッセージ: %s, 実際: %s", expectedError, err.Error())
+	}
+}
