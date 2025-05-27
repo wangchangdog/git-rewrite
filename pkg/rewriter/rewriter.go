@@ -145,7 +145,11 @@ func (r *Rewriter) generateNewRemoteURL(remoteURL string) (string, error) {
 
 	targetOwner := utils.GetTargetOwner(r.GitHubUser)
 	if targetOwner != r.GitHubUser {
-		fmt.Printf("GITHUB_ORGANIZATION環境変数が設定されています: %s\n", targetOwner)
+		if utils.IsPersonalRepository() {
+			fmt.Printf("GITHUB_REPOSITORY_OWNER環境変数が設定されています（個人リポジトリ）: %s\n", targetOwner)
+		} else {
+			fmt.Printf("GITHUB_ORGANIZATION環境変数が設定されています: %s\n", targetOwner)
+		}
 	}
 
 	// HTTPS形式かSSH形式かを判定

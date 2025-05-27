@@ -165,7 +165,12 @@ func (c *Client) CreateRepo(owner, repo string, private bool) error {
 
 	// リポジトリ作成のURL決定
 	var url string
-	if owner == currentUser.Login {
+
+	// GITHUB_REPOSITORY_OWNER が設定されている場合は個人リポジトリとして扱う
+	if os.Getenv("GITHUB_REPOSITORY_OWNER") != "" {
+		url = "https://api.github.com/user/repos"
+		fmt.Printf("個人リポジトリとして作成します（GITHUB_REPOSITORY_OWNER指定）: %s\n", owner)
+	} else if owner == currentUser.Login {
 		// 現在のユーザーと同じ場合は個人リポジトリ
 		url = "https://api.github.com/user/repos"
 		fmt.Printf("個人リポジトリとして作成します: %s\n", owner)

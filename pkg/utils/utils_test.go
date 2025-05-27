@@ -85,35 +85,88 @@ func TestExtractRepoInfoFromURL(t *testing.T) {
 func TestGetTargetOwner(t *testing.T) {
 	tests := []struct {
 		name        string
-		envValue    string
+		repoOwner   string
+		orgValue    string
 		defaultUser string
 		expected    string
 	}{
 		{
 			name:        "環境変数なし",
-			envValue:    "",
+			repoOwner:   "",
+			orgValue:    "",
 			defaultUser: "defaultuser",
 			expected:    "defaultuser",
 		},
 		{
-			name:        "環境変数あり",
-			envValue:    "myorg",
+			name:        "GITHUB_ORGANIZATION設定",
+			repoOwner:   "",
+			orgValue:    "myorg",
 			defaultUser: "defaultuser",
 			expected:    "myorg",
+		},
+		{
+			name:        "GITHUB_REPOSITORY_OWNER設定（優先）",
+			repoOwner:   "personalowner",
+			orgValue:    "myorg",
+			defaultUser: "defaultuser",
+			expected:    "personalowner",
+		},
+		{
+			name:        "GITHUB_REPOSITORY_OWNERのみ設定",
+			repoOwner:   "personalowner",
+			orgValue:    "",
+			defaultUser: "defaultuser",
+			expected:    "personalowner",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// 環境変数を設定
-			if tt.envValue != "" {
-				t.Setenv("GITHUB_ORGANIZATION", tt.envValue)
+			if tt.repoOwner != "" {
+				t.Setenv("GITHUB_REPOSITORY_OWNER", tt.repoOwner)
+			}
+			if tt.orgValue != "" {
+				t.Setenv("GITHUB_ORGANIZATION", tt.orgValue)
 			}
 
 			result := GetTargetOwner(tt.defaultUser)
 
 			if result != tt.expected {
 				t.Errorf("期待される結果: %s, 実際: %s", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestIsPersonalRepository(t *testing.T) {
+	tests := []struct {
+		name      string
+		repoOwner string
+		expected  bool
+	}{
+		{
+			name:      "GITHUB_REPOSITORY_OWNER未設定",
+			repoOwner: "",
+			expected:  false,
+		},
+		{
+			name:      "GITHUB_REPOSITORY_OWNER設定済み",
+			repoOwner: "personalowner",
+			expected:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.repoOwner != "" {
+				t.Setenv("GITHUB_REPOSITORY_OWNER", tt.repoOwner)
+			}
+
+			result := IsPersonalRepository()
+
+			if result != tt.expected {
+				t.Errorf("期待される結果: %t, 実際: %t", tt.expected, result)
 			}
 		})
 	}
