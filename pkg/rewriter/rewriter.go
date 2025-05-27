@@ -22,17 +22,29 @@ type RewriteResult struct {
 
 // Rewriter はGit履歴書き換えを行う
 type Rewriter struct {
-	GitHubClient *github.Client
-	GitHubUser   string
-	GitHubEmail  string
+	GitHubClient           *github.Client
+	GitHubUser             string
+	GitHubEmail            string
+	CollaboratorConfigPath string
 }
 
 // NewRewriter は新しいRewriterを作成する
 func NewRewriter(githubToken, githubUser, githubEmail string) *Rewriter {
 	return &Rewriter{
-		GitHubClient: github.NewClient(githubToken),
-		GitHubUser:   githubUser,
-		GitHubEmail:  githubEmail,
+		GitHubClient:           github.NewClient(githubToken),
+		GitHubUser:             githubUser,
+		GitHubEmail:            githubEmail,
+		CollaboratorConfigPath: "", // デフォルトは空（環境変数のみ使用）
+	}
+}
+
+// NewRewriterWithConfig はコラボレーター設定ファイル付きでRewriterを作成する
+func NewRewriterWithConfig(githubToken, githubUser, githubEmail, configPath string) *Rewriter {
+	return &Rewriter{
+		GitHubClient:           github.NewClient(githubToken),
+		GitHubUser:             githubUser,
+		GitHubEmail:            githubEmail,
+		CollaboratorConfigPath: configPath,
 	}
 }
 
@@ -222,7 +234,7 @@ func (r *Rewriter) VerifyAndPushRemote(gitDir string) error {
 		fmt.Printf("⚠️  リモートリポジトリ %s/%s が存在しません。\n", owner, repoName)
 		fmt.Println("リポジトリを作成しています...")
 
-		if err := r.GitHubClient.CreateRepo(owner, repoName, false); err != nil {
+		if err := r.GitHubClient.CreateRepoWithCollaborators(owner, repoName, true, r.CollaboratorConfigPath); err != nil {
 			return fmt.Errorf("リポジトリ作成エラー: %v", err)
 		}
 	} else {

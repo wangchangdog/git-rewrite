@@ -6,6 +6,7 @@ Git履歴の書き換えとリモートリポジトリ管理を自動化するGo
 
 - **Git履歴の一括書き換え**: 複数リポジトリのauthor/emailを一度に変更
 - **リモートリポジトリ自動作成**: GitHub APIを使用してリポジトリを自動作成
+- **コラボレーター自動追加**: 環境変数またはJSONファイルでコラボレーターを自動設定
 - **複数リポジトリ対応**: 指定ディレクトリ以下のすべてのGitリポジトリを自動検出・処理
 - **GitHub API統合**: Personal Access Tokenを使用した安全な認証
 - **包括的なテスト**: 単体テスト、統合テスト、エンドツーエンドテストを完備
@@ -31,6 +32,9 @@ cd go_binaries
 ```bash
 export GITHUB_USER="your-github-username"
 export GITHUB_EMAIL="your-github-email@example.com"
+
+# オプション: コラボレーター設定（環境変数）
+export GITHUB_COLLABORATORS="user1:push,user2:admin,user3:pull"
 ```
 
 ### 3. ビルド
@@ -60,6 +64,9 @@ make deps build
 # 特定のディレクトリを指定
 ./git-rewrite rewrite <github_token> /path/to/target/directory
 
+# コラボレーター設定ファイルを使用
+./git-rewrite rewrite <github_token> /path/to/target/directory collaborators.json
+
 # デモ機能の実行
 ./git-rewrite demo <github_token>
 
@@ -80,6 +87,97 @@ export GITHUB_EMAIL="myemail@example.com"
 
 # 例3: デモ機能でテスト実行
 ./git-rewrite demo ghp_xxxxxxxxxxxxxxxxxxxx
+
+# 例4: コラボレーター設定ファイルを使用
+./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects collaborators.json
+```
+
+## 🤝 コラボレーター機能
+
+### 概要
+
+リポジトリ作成時に自動的にコラボレーターを追加する機能です。環境変数またはJSONファイルで設定できます。
+
+### 環境変数での設定
+
+```bash
+# 基本的な設定
+export GITHUB_COLLABORATORS="user1:push,user2:admin,user3:pull"
+
+# 複数の権限レベル
+export GITHUB_COLLABORATORS="developer1:push,maintainer1:maintain,admin1:admin,viewer1:pull,triager1:triage"
+```
+
+### JSONファイルでの設定
+
+`collaborators.json`ファイルを作成：
+
+```json
+{
+  "default_collaborators": [
+    {
+      "username": "team-member1",
+      "permission": "push"
+    },
+    {
+      "username": "team-lead",
+      "permission": "admin"
+    }
+  ],
+  "project_collaborators": {
+    "special-project": [
+      {
+        "username": "project-lead",
+        "permission": "admin"
+      },
+      {
+        "username": "developer1",
+        "permission": "push"
+      }
+    ],
+    "public-project": [
+      {
+        "username": "contributor1",
+        "permission": "pull"
+      },
+      {
+        "username": "maintainer1",
+        "permission": "maintain"
+      }
+    ]
+  }
+}
+```
+
+### 権限レベル
+
+| 権限 | 説明 |
+|------|------|
+| `pull` | 読み取り専用アクセス |
+| `push` | 読み取り・書き込みアクセス |
+| `admin` | 管理者権限（すべての操作が可能） |
+| `maintain` | メンテナー権限（管理者権限の一部制限） |
+| `triage` | トリアージ権限（Issue・PRの管理） |
+
+### 優先順位
+
+1. **環境変数** (`GITHUB_COLLABORATORS`) - 最高優先度
+2. **設定ファイル** (`collaborators.json`) - 中優先度
+3. **プロジェクト固有設定** - 設定ファイル内の`project_collaborators`
+
+### 使用例
+
+```bash
+# 環境変数のみ使用
+export GITHUB_COLLABORATORS="dev1:push,admin1:admin"
+./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx
+
+# 設定ファイルのみ使用
+./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects collaborators.json
+
+# 両方使用（環境変数が優先される）
+export GITHUB_COLLABORATORS="urgent-dev:admin"
+./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects collaborators.json
 ```
 
 ## 🧪 テスト

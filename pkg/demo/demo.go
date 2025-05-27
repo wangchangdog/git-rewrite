@@ -88,7 +88,7 @@ func RunDemo(githubToken string) error {
 	// リポジトリ作成のテスト（存在しない場合のみ）
 	if !exists {
 		fmt.Println("\n3. リポジトリ作成テスト:")
-		if err := client.CreateRepo(owner, repoName, false); err != nil {
+		if err := client.CreateRepoWithCollaborators(owner, repoName, true, ""); err != nil {
 			fmt.Printf("   ✗ リポジトリの作成に失敗しました: %v\n", err)
 		} else {
 			fmt.Println("   ✓ リポジトリが正常に作成されました。")

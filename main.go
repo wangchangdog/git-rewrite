@@ -49,28 +49,35 @@ func showHelp() {
 	fmt.Println("  git-rewrite --help")
 	fmt.Println("")
 	fmt.Println("利用可能なコマンド:")
-	fmt.Println("  rewrite <github_token> [target_directory] - Git履歴の書き換えとリモートリポジトリ管理")
-	fmt.Println("  demo <github_token>                      - リモートリポジトリ作成機能のデモ")
-	fmt.Println("  test                                     - テストの実行")
-	fmt.Println("  help, --help, -h                         - このヘルプを表示")
+	fmt.Println("  rewrite <github_token> [target_directory] [collaborator_config] - Git履歴の書き換えとリモートリポジトリ管理")
+	fmt.Println("  demo <github_token>                                            - リモートリポジトリ作成機能のデモ")
+	fmt.Println("  test                                                           - テストの実行")
+	fmt.Println("  help, --help, -h                                               - このヘルプを表示")
 	fmt.Println("")
 	fmt.Println("環境変数:")
-	fmt.Println("  GITHUB_USER  - GitHubユーザー名")
-	fmt.Println("  GITHUB_EMAIL - GitHubメールアドレス")
+	fmt.Println("  GITHUB_USER           - GitHubユーザー名")
+	fmt.Println("  GITHUB_EMAIL          - GitHubメールアドレス")
+	fmt.Println("  GITHUB_COLLABORATORS  - コラボレーター設定（例: user1:push,user2:admin）")
+	fmt.Println("")
+	fmt.Println("コラボレーター設定:")
+	fmt.Println("  環境変数またはJSONファイルでコラボレーターを設定可能")
+	fmt.Println("  権限: pull, push, admin, maintain, triage")
 	fmt.Println("")
 	fmt.Println("例:")
 	fmt.Println("  git-rewrite --help")
 	fmt.Println("  git-rewrite test")
 	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx")
 	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects")
+	fmt.Println("  git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects collaborators.json")
 	fmt.Println("  git-rewrite demo ghp_xxxxxxxxxxxxxxxxxxxx")
 }
 
 func runRewrite(args []string) {
 	if len(args) < 1 {
-		fmt.Println("使用方法: git-rewrite rewrite <github_token> [target_directory]")
+		fmt.Println("使用方法: git-rewrite rewrite <github_token> [target_directory] [collaborator_config]")
 		fmt.Println("  github_token: GitHubのPersonal Access Token（repositoryアクセス権限付き）")
 		fmt.Println("  target_directory: 対象ディレクトリ（省略時は現在のディレクトリ）")
+		fmt.Println("  collaborator_config: コラボレーター設定（例: user1:push,user2:admin）")
 		fmt.Println("")
 		fmt.Println("環境変数も必要です:")
 		fmt.Println("  GITHUB_USER: GitHubユーザー名")
@@ -80,8 +87,13 @@ func runRewrite(args []string) {
 
 	githubToken := args[0]
 	targetDir := "."
+	collaboratorConfig := ""
+
 	if len(args) > 1 {
 		targetDir = args[1]
+	}
+	if len(args) > 2 {
+		collaboratorConfig = args[2]
 	}
 
 	// 環境変数をチェック
@@ -117,7 +129,14 @@ func runRewrite(args []string) {
 	fmt.Println()
 
 	// Rewriterを作成
-	rewriter := rewriter.NewRewriter(githubToken, githubUser, githubEmail)
+	var gitRewriter *rewriter.Rewriter
+	if collaboratorConfig != "" {
+		gitRewriter = rewriter.NewRewriterWithConfig(githubToken, githubUser, githubEmail, collaboratorConfig)
+		fmt.Printf("コラボレーター設定ファイル: %s\n", collaboratorConfig)
+	} else {
+		gitRewriter = rewriter.NewRewriter(githubToken, githubUser, githubEmail)
+		fmt.Println("コラボレーター設定: 環境変数のみ使用")
+	}
 
 	// 結果を追跡
 	var successCount int
@@ -128,7 +147,7 @@ func runRewrite(args []string) {
 	for i, gitDir := range gitDirs {
 		fmt.Printf("\n=== [%d/%d] %s でスクリプトを実行します ===\n", i+1, len(gitDirs), gitDir)
 
-		result := rewriter.ProcessRepository(gitDir)
+		result := gitRewriter.ProcessRepository(gitDir)
 
 		if result.Success {
 			successCount++
