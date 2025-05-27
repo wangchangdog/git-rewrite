@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"git-rewrite-tools/pkg/utils"
+	"git-rewrite-and-go/pkg/utils"
 )
 
 // RunTests は基本的なテストを実行する

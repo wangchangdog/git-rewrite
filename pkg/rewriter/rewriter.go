@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"git-rewrite-tools/pkg/github"
-	"git-rewrite-tools/pkg/utils"
+	"git-rewrite-and-go/pkg/github"
+	"git-rewrite-and-go/pkg/utils"
 )
 
 // RewriteResult は書き換え結果を表す

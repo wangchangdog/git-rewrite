@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"git-rewrite-tools/pkg/demo"
-	"git-rewrite-tools/pkg/rewriter"
-	"git-rewrite-tools/pkg/test"
-	"git-rewrite-tools/pkg/utils"
+	"git-rewrite-and-go/pkg/demo"
+	"git-rewrite-and-go/pkg/rewriter"
+	"git-rewrite-and-go/pkg/test"
+	"git-rewrite-and-go/pkg/utils"
 )
 
 // osExit はテスト時にos.Exitをモック可能にするための変数

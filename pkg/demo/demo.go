@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"git-rewrite-tools/pkg/github"
-	"git-rewrite-tools/pkg/rewriter"
-	"git-rewrite-tools/pkg/utils"
+	"git-rewrite-and-go/pkg/github"
+	"git-rewrite-and-go/pkg/rewriter"
+	"git-rewrite-and-go/pkg/utils"
 )
 
 // RunDemo はリモートリポジトリ作成機能のデモを実行する
