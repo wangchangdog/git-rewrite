@@ -109,6 +109,7 @@ func (c *RewriteCommand) displayConfig(config *config.Config) {
 	if config.PushAll {
 		fmt.Printf("  全ブランチ・タグプッシュ: 有効\n")
 	}
+	fmt.Printf("  GitHub Actions制御: %s\n", map[bool]string{true: "プッシュ前に無効化、プッシュ後に有効化", false: "制御なし"}[config.DisableActions])
 	fmt.Println()
 }
 
@@ -132,6 +133,7 @@ func (c *RewriteCommand) createRewriter(config *config.Config) *rewriter.Rewrite
 	gitRewriter.SetOwnershipConfig(config.Owner, config.Organization)
 	gitRewriter.SetPrivateOption(config.Private)
 	gitRewriter.SetCollaboratorsFromString(config.Collaborators)
+	gitRewriter.SetDisableActionsOption(config.DisableActions)
 
 	return gitRewriter
 }

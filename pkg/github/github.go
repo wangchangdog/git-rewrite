@@ -53,6 +53,11 @@ type CollaboratorConfig struct {
 	ProjectCollaborators map[string][]Collaborator `json:"project_collaborators"`
 }
 
+// ActionsPermissions はGitHub Actionsの権限設定
+type ActionsPermissions struct {
+	Enabled bool `json:"enabled"`
+}
+
 // CheckRepoExists はリポジトリの存在を確認する
 func (c *Client) CheckRepoExists(owner, repo string) (bool, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s", owner, repo)
@@ -454,4 +459,86 @@ func removeDuplicateCollaborators(collaborators []Collaborator) []Collaborator {
 	}
 
 	return result
+}
+
+// SetActionsEnabled はリポジトリのGitHub Actionsの有効/無効を設定する
+func (c *Client) SetActionsEnabled(owner, repo string, enabled bool) error {
+	if c.Token == "" {
+		return fmt.Errorf("GitHub トークンが設定されていません")
+	}
+
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/actions/permissions", owner, repo)
+
+	permissions := ActionsPermissions{
+		Enabled: enabled,
+	}
+
+	jsonData, err := json.Marshal(permissions)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", "token "+c.Token)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 204 {
+		status := map[bool]string{true: "有効", false: "無効"}[enabled]
+		fmt.Printf("✅ リポジトリ %s/%s のGitHub Actionsを%sにしました\n", owner, repo, status)
+		return nil
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	return fmt.Errorf("GitHub Actions設定エラー: %d - %s\n詳細: %s", resp.StatusCode, resp.Status, string(body))
+}
+
+// GetActionsEnabled はリポジトリのGitHub Actionsの有効/無効状態を取得する
+func (c *Client) GetActionsEnabled(owner, repo string) (bool, error) {
+	if c.Token == "" {
+		return false, fmt.Errorf("GitHub トークンが設定されていません")
+	}
+
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/actions/permissions", owner, repo)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, err
+	}
+
+	req.Header.Set("Authorization", "token "+c.Token)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 200 {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return false, err
+		}
+
+		var permissions ActionsPermissions
+		if err := json.Unmarshal(body, &permissions); err != nil {
+			return false, err
+		}
+
+		return permissions.Enabled, nil
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	return false, fmt.Errorf("GitHub Actions状態取得エラー: %d - %s\n詳細: %s", resp.StatusCode, resp.Status, string(body))
 }

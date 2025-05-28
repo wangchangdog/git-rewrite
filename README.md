@@ -6,6 +6,7 @@ Git履歴の書き換えとリモートリポジトリ管理を自動化するGo
 
 - **Git履歴の一括書き換え**: 複数リポジトリのauthor/emailを一度に変更
 - **リモートリポジトリ自動作成**: GitHub APIを使用してリポジトリを自動作成
+- **GitHub Actions制御**: プッシュ前にActionsを無効化、プッシュ後に有効化（デフォルト）
 - **コラボレーター自動追加**: 環境変数またはJSONファイルでコラボレーターを自動設定
 - **複数リポジトリ対応**: 指定ディレクトリ以下のすべてのGitリポジトリを自動検出・処理
 - **GitHub API統合**: Personal Access Tokenを使用した安全な認証
@@ -15,7 +16,7 @@ Git履歴の書き換えとリモートリポジトリ管理を自動化するGo
 
 - **Go**: 1.24.3以上
 - **Git**: 2.0以上
-- **GitHub Personal Access Token**: `repo`スコープ付き
+- **GitHub Personal Access Token**: `repo`および`actions`スコープ付き
 - **環境変数**: `GITHUB_USER`と`GITHUB_EMAIL`の設定
 
 ## 🔧 インストール
@@ -24,7 +25,7 @@ Git履歴の書き換えとリモートリポジトリ管理を自動化するGo
 
 ```bash
 git clone <repository-url>
-cd go_binaries
+cd git-rewrite-and-go
 ```
 
 ### 2. 環境変数の設定
@@ -52,45 +53,95 @@ make deps build
 
 ## 📖 使用方法
 
-### 基本コマンド
+### 新しいコマンド形式（推奨）
 
 ```bash
 # ヘルプを表示
-./git-rewrite
+./git-rewrite --help
 
-# 現在のディレクトリ以下のすべてのGitリポジトリを処理
-./git-rewrite rewrite <github_token>
+# 基本的な使用方法
+./git-rewrite rewrite <github_token> --user <username> --email <email>
 
 # 特定のディレクトリを指定
-./git-rewrite rewrite <github_token> /path/to/target/directory
+./git-rewrite rewrite <github_token> --user <username> --email <email> --target-dir ~/projects
 
-# コラボレーター設定ファイルを使用
-./git-rewrite rewrite <github_token> /path/to/target/directory collaborators.json
+# 組織リポジトリとして作成
+./git-rewrite rewrite <github_token> --user <username> --email <email> --organization myorg
 
+# 個人リポジトリ所有者を指定
+./git-rewrite rewrite <github_token> --user <username> --email <email> --owner specificuser
+
+# パブリックリポジトリとして作成
+./git-rewrite rewrite <github_token> --user <username> --email <email> --public
+
+# 全ブランチ・タグをプッシュ
+./git-rewrite rewrite <github_token> --user <username> --email <email> --push-all
+
+# GitHub Actions制御を無効化
+./git-rewrite rewrite <github_token> --user <username> --email <email> --enable-actions
+
+# デバッグモード
+./git-rewrite rewrite <github_token> --user <username> --email <email> --debug
+```
+
+### コラボレーター設定
+
+```bash
+# コマンドラインでコラボレーター指定
+./git-rewrite rewrite <github_token> --user <username> --email <email> --collaborators "dev1:push,admin1:admin"
+
+# 設定ファイルを使用
+./git-rewrite rewrite <github_token> --user <username> --email <email> --collaborator-config collaborators.json
+```
+
+### デモ機能
+
+```bash
 # デモ機能の実行
-./git-rewrite demo <github_token>
+./git-rewrite demo <github_token> --user <username> --email <email>
 
 # 内蔵テストの実行
 ./git-rewrite test
 ```
 
-### 実行例
+## 🎛️ GitHub Actions制御
+
+### 概要
+
+デフォルトでは、プッシュ時にGitHub Actionsが実行されることを防ぐため、以下の制御を自動的に行います：
+
+1. **プッシュ前**: GitHub Actionsを無効化
+2. **プッシュ実行**: 通常のGitプッシュ処理
+3. **プッシュ後**: GitHub Actionsを有効化（GitHubのデフォルト状態）
+
+### 設定オプション
 
 ```bash
-# 例1: 現在のディレクトリ以下のすべてのリポジトリを処理
-export GITHUB_USER="myusername"
-export GITHUB_EMAIL="myemail@example.com"
-./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx
+# デフォルト（Actions制御有効）
+./git-rewrite rewrite <token> --user <user> --email <email>
 
-# 例2: 特定のプロジェクトディレクトリを処理
-./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects
-
-# 例3: デモ機能でテスト実行
-./git-rewrite demo ghp_xxxxxxxxxxxxxxxxxxxx
-
-# 例4: コラボレーター設定ファイルを使用
-./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects collaborators.json
+# Actions制御を無効化（Actionsが通常通り実行される）
+./git-rewrite rewrite <token> --user <user> --email <email> --enable-actions
 ```
+
+### 動作フロー
+
+```
+1. リポジトリのActions状態を取得・保存
+   ↓
+2. GitHub ActionsをOFFに設定
+   ↓
+3. Git履歴書き換え・プッシュ実行
+   ↓
+4. GitHub ActionsをON（デフォルト状態）に復元
+```
+
+### 必要な権限
+
+GitHub Personal Access Tokenに以下のスコープが必要です：
+
+- `repo`: リポジトリの作成・管理
+- `actions`: GitHub Actionsの設定変更
 
 ## 🤝 コラボレーター機能
 
@@ -161,23 +212,47 @@ export GITHUB_COLLABORATORS="developer1:push,maintainer1:maintain,admin1:admin,v
 
 ### 優先順位
 
-1. **環境変数** (`GITHUB_COLLABORATORS`) - 最高優先度
-2. **設定ファイル** (`collaborators.json`) - 中優先度
-3. **プロジェクト固有設定** - 設定ファイル内の`project_collaborators`
+1. **コマンドライン引数** (`--collaborators`) - 最高優先度
+2. **環境変数** (`GITHUB_COLLABORATORS`) - 高優先度
+3. **設定ファイル** (`--collaborator-config`) - 中優先度
+4. **プロジェクト固有設定** - 設定ファイル内の`project_collaborators`
+
+## 📋 コマンドラインオプション
+
+### 必須オプション
+
+- `--user, -u <username>`: GitHubユーザー名
+- `--email, -e <email>`: GitHubメールアドレス
+
+### オプション引数
+
+- `--target-dir, -d <directory>`: 対象ディレクトリ（デフォルト: `.`）
+- `--owner, -o <owner>`: 個人リポジトリ所有者（最高優先度）
+- `--organization <org>`: 組織名
+- `--collaborators <list>`: コラボレーター設定（例: `user1:push,user2:admin`）
+- `--collaborator-config, -c <file>`: コラボレーター設定ファイル
+- `--push-all`: 全ブランチ・タグをプッシュ
+- `--debug`: デバッグモード
+- `--public`: パブリックリポジトリとして作成（デフォルト: プライベート）
+- `--enable-actions`: GitHub Actions制御を無効化（デフォルトでActions制御は有効）
 
 ### 使用例
 
 ```bash
-# 環境変数のみ使用
-export GITHUB_COLLABORATORS="dev1:push,admin1:admin"
-./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx
+# 基本的な使用
+./git-rewrite rewrite ghp_xxx --user myuser --email my@email.com
 
-# 設定ファイルのみ使用
-./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects collaborators.json
+# 組織リポジトリとして作成
+./git-rewrite rewrite ghp_xxx --user myuser --email my@email.com --organization myorg
 
-# 両方使用（環境変数が優先される）
-export GITHUB_COLLABORATORS="urgent-dev:admin"
-./git-rewrite rewrite ghp_xxxxxxxxxxxxxxxxxxxx ~/projects collaborators.json
+# コラボレーター付きでパブリックリポジトリを作成
+./git-rewrite rewrite ghp_xxx --user myuser --email my@email.com --public --collaborators "dev1:push,admin1:admin"
+
+# Actions制御を無効化してデバッグモードで実行
+./git-rewrite rewrite ghp_xxx --user myuser --email my@email.com --enable-actions --debug
+
+# 全ブランチ・タグをプッシュ
+./git-rewrite rewrite ghp_xxx --user myuser --email my@email.com --push-all
 ```
 
 ## 🧪 テスト
@@ -215,6 +290,7 @@ go test ./pkg/...
 - ユーティリティ関数のテスト
 - Git操作の基本機能テスト
 - URL解析・ファイル操作テスト
+- GitHub Actions制御機能のテスト
 
 #### 2. メイン関数テスト
 ```bash
@@ -239,6 +315,7 @@ go test ./tests/...
 ✓ SafeDecode テスト成功
 ✓ ExtractRepoInfoFromURL テスト成功
 ✓ FileExists テスト成功
+✓ SetDisableActionsOption テスト成功
 ✓ Git リポジトリ初期化成功
 ✓ ファイル作成とコミット成功
 ✓ リモート設定成功
@@ -298,15 +375,19 @@ make build-release
 ## 📁 プロジェクト構造
 
 ```
-git-rewrite/
+git-rewrite-and-go/
 ├── 📄 main.go                 # メインエントリーポイント
 ├── 🧪 main_test.go           # メイン関数のテスト
 ├── 🔧 Makefile               # ビルド・テスト自動化
 ├── 📋 go.mod                 # Go モジュール定義
 ├── 📖 README.md              # このファイル
 ├── 📦 pkg/                   # 内部パッケージ
+│   ├── 🎯 cli/              # CLIインターフェース
+│   │   ├── commands/        # コマンド実装
+│   │   └── config/          # 設定管理
 │   ├── 🎯 demo/             # デモ機能
 │   ├── 🐙 github/           # GitHub API クライアント
+│   ├── 🔄 git/              # Git操作
 │   ├── ✏️  rewriter/         # Git履歴書き換え機能
 │   ├── 🧪 test/             # 内蔵テスト機能
 │   └── 🔧 utils/            # ユーティリティ関数
@@ -320,30 +401,37 @@ git-rewrite/
 
 ```bash
 # 会社のメールアドレスから個人のメールアドレスに一括変更
-export GITHUB_USER="personal-account"
-export GITHUB_EMAIL="personal@example.com"
-./git-rewrite rewrite <token> ~/work-projects
+./git-rewrite rewrite <token> --user personal-account --email personal@example.com --target-dir ~/work-projects
 ```
 
 ### 2. 複数プロジェクトの統一
 
 ```bash
 # 複数のプロジェクトのauthor情報を統一
-./git-rewrite rewrite <token> ~/all-projects
+./git-rewrite rewrite <token> --user unified-account --email unified@example.com --target-dir ~/all-projects
 ```
 
 ### 3. 新しいGitHubアカウントへの移行
 
 ```bash
 # 既存のリポジトリを新しいGitHubアカウントに移行
-./git-rewrite rewrite <new-account-token> ~/repositories
+./git-rewrite rewrite <new-account-token> --user new-account --email new@example.com --target-dir ~/repositories
+```
+
+### 4. CI/CDパイプラインでの使用
+
+```bash
+# Actions制御を無効化してCI/CDで使用
+./git-rewrite rewrite <token> --user ci-user --email ci@example.com --enable-actions --public
 ```
 
 ## 🔒 セキュリティ
 
 ### GitHub Personal Access Token
 
-1. **最小権限の原則**: `repo`スコープのみを付与
+1. **必要なスコープ**: 
+   - `repo`: リポジトリの作成・管理
+   - `actions`: GitHub Actionsの設定変更
 2. **トークンの管理**: 環境変数や設定ファイルで安全に管理
 3. **定期的な更新**: トークンの定期的な再生成を推奨
 
@@ -414,19 +502,26 @@ git clone --mirror your-repo your-repo-backup.git
 #### 1. 環境変数が設定されていない
 
 ```bash
-# エラー: GITHUB_USER環境変数が設定されていません
-export GITHUB_USER="your-username"
-export GITHUB_EMAIL="your-email@example.com"
+# エラー: --user フラグまたはGITHUB_USER環境変数が必要です
+./git-rewrite rewrite <token> --user your-username --email your-email@example.com
 ```
 
 #### 2. GitHub Personal Access Tokenの権限不足
 
 ```bash
 # エラー: リポジトリ作成エラー: 403 Forbidden
-# → トークンに 'repo' スコープが付与されているか確認
+# → トークンに 'repo' および 'actions' スコープが付与されているか確認
 ```
 
-#### 3. Gitリポジトリが見つからない
+#### 3. GitHub Actions制御エラー
+
+```bash
+# エラー: GitHub Actions状態取得に失敗しました
+# → トークンに 'actions' スコープが付与されているか確認
+# → リポジトリが存在するか確認
+```
+
+#### 4. Gitリポジトリが見つからない
 
 ```bash
 # エラー: 対象となる.gitディレクトリが見つかりませんでした
@@ -434,7 +529,7 @@ export GITHUB_EMAIL="your-email@example.com"
 ls -la your-directory/.git
 ```
 
-#### 4. ビルドエラー
+#### 5. ビルドエラー
 
 ```bash
 # Go のバージョンを確認
@@ -453,11 +548,14 @@ make clean build
 # 詳細なテスト出力
 go test -v ./...
 
+# デバッグモードで実行
+./git-rewrite rewrite <token> --user <user> --email <email> --debug
+
 # 内蔵テストでの動作確認
 ./git-rewrite test
 
 # デモ機能での動作確認
-./git-rewrite demo <token>
+./git-rewrite demo <token> --user <user> --email <email>
 ```
 
 ## 📞 サポート
@@ -469,6 +567,7 @@ go test -v ./...
 - エラーメッセージの全文
 - 実行したコマンド
 - 期待される動作と実際の動作
+- GitHub Personal Access Tokenのスコープ
 
 ---
 

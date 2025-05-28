@@ -201,6 +201,50 @@ func TestParseRewriteArgsDefaults(t *testing.T) {
 	if config.Debug {
 		t.Error("Debugのデフォルト値がfalseではありません")
 	}
+	if !config.DisableActions {
+		t.Error("DisableActionsのデフォルト値がtrueではありません")
+	}
+}
+
+// TestParseRewriteArgsActionsControl はActions制御オプションをテストする
+func TestParseRewriteArgsActionsControl(t *testing.T) {
+	// 環境変数をクリーンアップ
+	clearTestEnvs()
+
+	tests := []struct {
+		name                   string
+		args                   []string
+		expectedDisableActions bool
+		description            string
+	}{
+		{
+			name:                   "デフォルト（Actions制御有効）",
+			args:                   []string{"ghp_test123", "--user", "testuser", "--email", "test@example.com"},
+			expectedDisableActions: true,
+			description:            "デフォルトでActions制御が有効",
+		},
+		{
+			name:                   "--enable-actionsでActions制御無効",
+			args:                   []string{"ghp_test123", "--user", "testuser", "--email", "test@example.com", "--enable-actions"},
+			expectedDisableActions: false,
+			description:            "--enable-actionsでActions制御を無効化",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config, err := ParseRewriteArgs(tt.args)
+			if err != nil {
+				t.Errorf("Actions制御テストでエラーが発生しました: %v (%s)", err, tt.description)
+				return
+			}
+
+			if config.DisableActions != tt.expectedDisableActions {
+				t.Errorf("DisableActionsが期待値と異なります。期待値: %t, 実際: %t (%s)",
+					tt.expectedDisableActions, config.DisableActions, tt.description)
+			}
+		})
+	}
 }
 
 // TestGetConfigValue はgetConfigValue関数をテストする

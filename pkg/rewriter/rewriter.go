@@ -31,6 +31,7 @@ type Rewriter struct {
 	Organization           string
 	Private                bool
 	CollaboratorsString    string
+	DisableActions         bool // GitHub Actionsを無効化するかどうか
 }
 
 // NewRewriter は新しいRewriterを作成する
@@ -43,6 +44,7 @@ func NewRewriter(githubToken, githubUser, githubEmail string) *Rewriter {
 		CollaboratorConfigPath: "", // デフォルトは空（環境変数のみ使用）
 		PushAll:                false,
 		Private:                true, // デフォルトはプライベート
+		DisableActions:         true, // デフォルトでActions制御を有効
 	}
 }
 
@@ -56,6 +58,7 @@ func NewRewriterWithConfig(githubToken, githubUser, githubEmail, configPath stri
 		CollaboratorConfigPath: configPath,
 		PushAll:                false,
 		Private:                true, // デフォルトはプライベート
+		DisableActions:         true, // デフォルトでActions制御を有効
 	}
 }
 
@@ -78,6 +81,11 @@ func (r *Rewriter) SetPrivateOption(private bool) {
 // SetCollaboratorsFromString は文字列からコラボレーター設定を行う
 func (r *Rewriter) SetCollaboratorsFromString(collaborators string) {
 	r.CollaboratorsString = collaborators
+}
+
+// SetDisableActionsOption はActions制御オプションを設定する
+func (r *Rewriter) SetDisableActionsOption(disableActions bool) {
+	r.DisableActions = disableActions
 }
 
 // RewriteGitHistory はGit履歴を書き換える
@@ -210,9 +218,59 @@ func (r *Rewriter) ProcessRepository(gitDir string) *RewriteResult {
 		return result
 	}
 
+	// Actions制御が有効な場合、プッシュ前にActionsを無効化
+	var originalActionsState bool
+	var actionsControlled bool
+	if r.DisableActions {
+		// リモートURLからリポジトリ情報を取得
+		stdout, _, err := utils.RunCommand(gitDir, "git", "remote", "get-url", "origin")
+		if err == nil {
+			remoteURL := strings.TrimSpace(stdout)
+			owner, repoName := utils.ExtractRepoInfoFromURL(remoteURL)
+			if owner != "" && repoName != "" {
+				// 現在のActions状態を保存
+				if currentState, err := r.GitHubClient.GetActionsEnabled(owner, repoName); err == nil {
+					originalActionsState = currentState
+					actionsControlled = true
+
+					// Actionsを無効化
+					if err := r.GitHubClient.SetActionsEnabled(owner, repoName, false); err != nil {
+						fmt.Printf("⚠️  GitHub Actions無効化に失敗しました: %v\n", err)
+					}
+				} else {
+					fmt.Printf("⚠️  GitHub Actions状態取得に失敗しました: %v\n", err)
+				}
+			}
+		}
+	}
+
 	// リモート確認とプッシュ
-	if err := r.VerifyAndPushRemote(gitDir); err != nil {
-		result.Error = err
+	pushErr := r.VerifyAndPushRemote(gitDir)
+
+	// Actions制御が有効だった場合、プッシュ後にActionsを元の状態に戻す
+	if actionsControlled {
+		// リモートURLからリポジトリ情報を再取得（念のため）
+		stdout, _, err := utils.RunCommand(gitDir, "git", "remote", "get-url", "origin")
+		if err == nil {
+			remoteURL := strings.TrimSpace(stdout)
+			owner, repoName := utils.ExtractRepoInfoFromURL(remoteURL)
+			if owner != "" && repoName != "" {
+				// Actionsを元の状態に戻す（デフォルトは有効）
+				targetState := originalActionsState
+				if !originalActionsState {
+					// 元々無効だった場合でも、デフォルトで有効にする
+					targetState = true
+				}
+
+				if err := r.GitHubClient.SetActionsEnabled(owner, repoName, targetState); err != nil {
+					fmt.Printf("⚠️  GitHub Actions復元に失敗しました: %v\n", err)
+				}
+			}
+		}
+	}
+
+	if pushErr != nil {
+		result.Error = pushErr
 		return result
 	}
 

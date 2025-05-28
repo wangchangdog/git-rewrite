@@ -116,6 +116,28 @@ func TestSetCollaboratorsFromString(t *testing.T) {
 	}
 }
 
+// TestSetDisableActionsOption はSetDisableActionsOptionメソッドをテストする
+func TestSetDisableActionsOption(t *testing.T) {
+	rewriter := NewRewriter("test-token", "testuser", "test@example.com")
+
+	// デフォルトはtrue（Actions制御有効）
+	if !rewriter.DisableActions {
+		t.Error("デフォルトのDisableActionsはtrueであるべきです")
+	}
+
+	// falseに設定（Actions制御無効）
+	rewriter.SetDisableActionsOption(false)
+	if rewriter.DisableActions {
+		t.Error("SetDisableActionsOption(false)後、DisableActionsはfalseであるべきです")
+	}
+
+	// trueに設定（Actions制御有効）
+	rewriter.SetDisableActionsOption(true)
+	if !rewriter.DisableActions {
+		t.Error("SetDisableActionsOption(true)後、DisableActionsはtrueであるべきです")
+	}
+}
+
 // TestNewRewriterDefaults は新しいRewriterのデフォルト値をテストする
 func TestNewRewriterDefaults(t *testing.T) {
 	tests := []struct {
@@ -155,6 +177,9 @@ func TestNewRewriterDefaults(t *testing.T) {
 			}
 			if rewriter.CollaboratorsString != "" {
 				t.Error("デフォルトのCollaboratorsStringは空であるべきです")
+			}
+			if !rewriter.DisableActions {
+				t.Error("デフォルトのDisableActionsはtrueであるべきです")
 			}
 		})
 	}

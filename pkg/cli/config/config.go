@@ -19,6 +19,7 @@ type Config struct {
 	PushAll            bool
 	Debug              bool
 	Private            bool
+	DisableActions     bool // GitHub Actionsを無効化するかどうか（デフォルト: true）
 }
 
 // ParseRewriteArgs はrewriteコマンドの引数を解析する
@@ -44,12 +45,15 @@ func ParseRewriteArgs(args []string) (*Config, error) {
 		fmt.Println("  --push-all                      全ブランチ・タグをプッシュ")
 		fmt.Println("  --debug                         デバッグモード")
 		fmt.Println("  --public                        パブリックリポジトリとして作成（デフォルト: プライベート）")
+		fmt.Println("  --disable-actions               プッシュ前にGitHub Actionsを無効化（プッシュ後に有効化）")
+		fmt.Println("  --enable-actions                GitHub Actions制御を無効化（デフォルトでActions制御は有効）")
 	}
 
 	config := &Config{
-		GitHubToken: args[0],
-		TargetDir:   ".",
-		Private:     true, // デフォルトはプライベート
+		GitHubToken:    args[0],
+		TargetDir:      ".",
+		Private:        true, // デフォルトはプライベート
+		DisableActions: true, // デフォルトでActions制御を有効
 	}
 
 	// フラグ定義
@@ -68,6 +72,10 @@ func ParseRewriteArgs(args []string) (*Config, error) {
 	fs.BoolVar(&config.PushAll, "push-all", false, "全ブランチ・タグをプッシュ")
 	fs.BoolVar(&config.Debug, "debug", false, "デバッグモード")
 
+	// Actions制御のオプション（デフォルトは有効）
+	var enableActions bool
+	fs.BoolVar(&enableActions, "enable-actions", false, "GitHub Actions制御を無効化")
+
 	// --publicフラグが指定された場合はPrivateをfalseにする
 	var public bool
 	fs.BoolVar(&public, "public", false, "パブリックリポジトリとして作成")
@@ -75,6 +83,11 @@ func ParseRewriteArgs(args []string) (*Config, error) {
 	// 引数を解析
 	if err := fs.Parse(args[1:]); err != nil {
 		return nil, err
+	}
+
+	// --enable-actionsが指定された場合はActions制御を無効にする
+	if enableActions {
+		config.DisableActions = false
 	}
 
 	// --publicが指定された場合はプライベートをfalseにする
