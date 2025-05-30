@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"git-rewrite-and-go/pkg/cli/config"
-	"git-rewrite-and-go/pkg/rewriter"
-	"git-rewrite-and-go/pkg/utils"
+	"git-rewrite/pkg/cli/config"
+	"git-rewrite/pkg/rewriter"
+	"git-rewrite/pkg/utils"
 )
 
 // RewriteCommand はrewriteコマンドを実行する

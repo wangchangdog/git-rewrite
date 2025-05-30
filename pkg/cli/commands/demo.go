@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"git-rewrite-and-go/pkg/cli/config"
-	"git-rewrite-and-go/pkg/demo"
+	"git-rewrite/pkg/cli/config"
+	"git-rewrite/pkg/demo"
 )
 
 // DemoCommand はdemoコマンドを実行する

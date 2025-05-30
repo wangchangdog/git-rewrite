@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"git-rewrite-and-go/pkg/git"
-	"git-rewrite-and-go/pkg/github"
-	"git-rewrite-and-go/pkg/utils"
+	"git-rewrite/pkg/git"
+	"git-rewrite/pkg/github"
+	"git-rewrite/pkg/utils"
 )
 
 // RewriteResult は書き換え結果を表す

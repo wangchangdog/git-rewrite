@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"git-rewrite-and-go/pkg/cli"
-	"git-rewrite-and-go/pkg/cli/commands"
-	"git-rewrite-and-go/pkg/test"
+	"git-rewrite/pkg/cli"
+	"git-rewrite/pkg/cli/commands"
+	"git-rewrite/pkg/test"
 )
 
 // osExit はテスト時にos.Exitをモック可能にするための変数

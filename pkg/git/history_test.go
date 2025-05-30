@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"git-rewrite-and-go/pkg/utils"
+	"git-rewrite/pkg/utils"
 )
 
 // TestRewriteHistory はRewriteHistory関数をテストする

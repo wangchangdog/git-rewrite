@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"git-rewrite-and-go/pkg/utils"
+	"git-rewrite/pkg/utils"
 )
 
 // PushAllBranchesAndTags はローカルの全ブランチとタグをリモートにプッシュする

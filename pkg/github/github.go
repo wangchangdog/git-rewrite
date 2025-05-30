@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"git-rewrite-and-go/pkg/utils"
+	"git-rewrite/pkg/utils"
 	"io"
 	"net/http"
 	"os"

@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"git-rewrite-and-go/pkg/utils"
+	"git-rewrite/pkg/utils"
 )
 
 // UpdateRemoteURL はリモートURLを更新する

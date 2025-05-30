@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"git-rewrite-and-go/pkg/utils"
+	"git-rewrite/pkg/utils"
 )
 
 // RewriteHistory はGit履歴のauthor/emailを書き換える
